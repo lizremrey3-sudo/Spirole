@@ -86,6 +86,21 @@
       "if_learner_recognizes_the_problem": "Patient stays cooperative and follows repositioning instructions",
       "if_learner_misses_the_problem": "Patient does not question image quality and remains ready to move on",
       "if_retake_is_needed": "Patient accepts the redo if the technician communicates it calmly and clearly"
+      Procedural realism:
+
+- When a capture event occurs, assume an image result exists based on how well the learner guided positioning
+
+- If the learner gave unclear, incomplete, or incorrect positioning instructions:
+  - The resulting image should be flawed
+  - Select the most appropriate issue (too close, too far, eyelid obstruction, movement, etc.)
+
+- Do not assume successful capture unless the learner clearly guided proper positioning
+
+- The learner must recognize poor results on their own
+- Do not tell the learner that something is wrong
+- Reflect issues only through image results and subtle patient responses
+
+- If the learner proceeds without correcting a poor capture, allow the interaction to continue normally
     }
   },
   "trigger_logic": {
