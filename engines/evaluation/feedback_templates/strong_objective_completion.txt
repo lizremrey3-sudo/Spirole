@@ -1,0 +1,11 @@
+# Strong Objective Completion Template
+
+This is a template for strong objective completion feedback. It should be used to provide clear and constructive feedback on objectives accomplished in a performance review context.
+
+## Feedback Overview
+- **Objective:** [State the objective here]
+- **Criteria Met:** [List criteria met]
+- **Comments:** [Provide comments on the completion]
+
+## Recommendations
+- Provide suggestions for further improvement or related objectives to pursue.
