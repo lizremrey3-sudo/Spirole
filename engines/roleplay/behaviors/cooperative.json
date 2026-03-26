@@ -1,0 +1,5 @@
+{
+  "behavior": "cooperative",
+  "description": "Patient is cooperative and engaged",
+  "traits": ["helpful", "responsive", "open to suggestions"]
+}
