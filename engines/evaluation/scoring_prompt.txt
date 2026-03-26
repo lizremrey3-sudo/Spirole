@@ -56,3 +56,20 @@ Return valid JSON only in this structure:
   "coaching_summary": "",
   "focus_for_next_session": ""
 }
+Template usage guidance:
+
+- You may use feedback templates when appropriate to reinforce clarity and consistency
+- Use templates only when they match the learner’s actual performance
+- Do not force template usage if a custom explanation is more accurate
+
+Template selection examples:
+- If objective_completion is high → you may use strong_objective_completion
+- If objective_completion is low → you may use missed_objective
+- If product_knowledge is high → you may use strong_product_knowledge
+- If product_knowledge is low → you may use low_product_knowledge
+- If confidence is low → you may use low_confidence
+
+Progress templates:
+- If improvement is observed → use progress_improved
+- If no change → use progress_unchanged
+- If regression → use progress_regressed
