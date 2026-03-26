@@ -99,12 +99,15 @@
       "if_learner_normalizes_errors": "Patient relaxes and follows instructions better"
     }
   },
-  "ui_support": {
-    "enabled": true,
-    "initial_view": {
-      "image_key": "oct_positioning_screen_01",
-      "description": "Patient is positioned at OCT with fixation target visible"
-    },
+"ui_support": {
+  "enabled": true,
+  "patient_intro_image": {
+    "image_key": "patient_female_older_anxious_01"
+  },
+  "initial_view": {
+    "image_key": "oct_positioning_screen_01",
+    "description": "Patient is positioned at OCT with fixation target visible"
+  },
     "visual_events": [
       {
         "event_id": "pulls_back_from_machine",
