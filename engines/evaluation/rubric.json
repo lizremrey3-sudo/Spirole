@@ -1,1 +1,94 @@
-{\n  "rubric_name": "spirole_core_v1",\n  "scale": {\n    "min": 0,\n    "max": 10\n  },\n  "categories": [\n    {\n      "id": "objective_completion",\n      "label": "Objective Completion",\n      "description": "How effectively the learner achieved the main goal of the interaction",\n      "weight": 1.0\n    },\n    {\n      "id": "empathy",\n      "label": "Empathy",\n      "description": "How well the learner acknowledged emotion, frustration, or concern",\n      "weight": 1.0\n    },\n    {\n      "id": "product_knowledge",\n      "label": "Product Knowledge",\n      "description": "How accurately and clearly the learner explained relevant optical concepts or solutions",\n      "weight": 1.0\n    },\n    {\n      "id": "communication_clarity",\n      "label": "Communication Clarity",\n      "description": "How easy the learner was to understand and how well they guided the conversation",\n      "weight": 1.0\n    },\n    {\n      "id": "confidence",\n      "label": "Confidence",\n      "description": "How calm, assured, and appropriately directive the learner sounded",\n      "weight": 1.0\n    }\n  ],\n  "output_requirements": {\n    "include_total_score": true,\n    "include_strengths": 3,\n    "include_improvement_areas": 3,\n    "include_coaching_summary": true,\n    "include_next_skill": true\n  }\n}
+{
+  "rubric_name": "spirole_core_v1",
+  "total_possible_score": 50,
+  "scale": {
+    "min": 0,
+    "max": 10
+  },
+  "categories": [
+    {
+      "id": "objective_completion",
+      "label": "Objective Completion",
+      "description": "How effectively the learner completed the practical objective of the scenario.",
+      "what_high_looks_like": [
+        "Recognizes issues that need correction",
+        "Takes appropriate next steps",
+        "Does not move forward prematurely"
+      ],
+      "what_low_looks_like": [
+        "Misses key issues",
+        "Fails to correct errors",
+        "Ends the interaction without completing the objective"
+      ]
+    },
+    {
+      "id": "empathy",
+      "label": "Empathy",
+      "description": "How well the learner acknowledged patient emotion, uncertainty, or discomfort.",
+      "what_high_looks_like": [
+        "Uses reassuring language",
+        "Responds to anxiety without sounding dismissive",
+        "Helps the patient feel comfortable"
+      ],
+      "what_low_looks_like": [
+        "Ignores patient concern",
+        "Sounds cold or rushed",
+        "Misses emotional cues"
+      ]
+    },
+    {
+      "id": "product_knowledge",
+      "label": "Product Knowledge",
+      "description": "How accurately the learner demonstrated understanding of the procedure, test, or issue being addressed.",
+      "what_high_looks_like": [
+        "Understands what a good result should look like",
+        "Recognizes poor image quality or technique problems",
+        "Explains the procedure accurately when needed"
+      ],
+      "what_low_looks_like": [
+        "Misses technical issues",
+        "Allows poor captures to stand",
+        "Gives inaccurate or incomplete procedural guidance"
+      ]
+    },
+    {
+      "id": "communication_clarity",
+      "label": "Communication Clarity",
+      "description": "How clear, usable, and step-by-step the learner’s instructions were.",
+      "what_high_looks_like": [
+        "Gives specific instructions",
+        "Guides the patient step-by-step",
+        "Uses language the patient can follow easily"
+      ],
+      "what_low_looks_like": [
+        "Gives vague directions",
+        "Skips important steps",
+        "Uses confusing or incomplete wording"
+      ]
+    },
+    {
+      "id": "confidence",
+      "label": "Confidence",
+      "description": "How calm, assured, and in-control the learner sounded while guiding the interaction.",
+      "what_high_looks_like": [
+        "Sounds steady and direct",
+        "Guides corrections without hesitation",
+        "Maintains patient trust during retakes or redirection"
+      ],
+      "what_low_looks_like": [
+        "Sounds unsure or hesitant",
+        "Over-explains from uncertainty",
+        "Creates doubt during corrections"
+      ]
+    }
+  ],
+  "output_requirements": {
+    "return_numeric_scores": true,
+    "include_total_score": true,
+    "include_strengths": 2,
+    "include_opportunities": 2,
+    "include_coaching_summary": true,
+    "include_focus_for_next_session": true,
+    "include_progress_check_when_previous_focus_exists": true
+  }
+}
