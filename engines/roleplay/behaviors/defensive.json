@@ -1,0 +1,5 @@
+{
+  "behavior": "defensive",
+  "description": "Patient is defensive and resistant",
+  "traits": ["guarded", "resistant", "protective"]
+}
