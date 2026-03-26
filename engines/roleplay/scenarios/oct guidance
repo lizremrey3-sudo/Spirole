@@ -36,67 +36,101 @@
     "Uses overly technical language",
     "Fails to address fear directly",
     "Rushing instructions"
-  ]
-}
-"procedural_guidance": {
-  "training_mode": "step_by_step_positioning",
-  "learner_goal": [
-    "Position the patient correctly",
-    "Give clear, calm step-by-step instructions",
-    "Correct mistakes without sounding frustrated",
-    "Keep the patient engaged and cooperative until capture is complete"
   ],
-  "ideal_sequence": [
-    "Explain the test briefly in patient-friendly language",
-    "Reassure the patient that the machine will not touch the eye",
-    "Direct the patient where to place chin and forehead",
-    "Guide head positioning",
-    "Tell the patient where to look",
-    "Instruct the patient to hold still and blink normally unless told otherwise",
-    "Prepare the patient for the capture moment",
-    "Correct positioning or fixation issues as needed"
-  ],
-  "common_patient_errors": [
-    {
-      "error_id": "pulls_back_from_machine",
-      "description": "Patient leans away slightly when the machine gets close",
-      "likely_trigger": "anxiety or unclear reassurance",
-      "patient_response": "Sorry, I just do not like things that close to my eye.",
-      "best_tech_response_goal": "Reassure calmly and re-direct positioning without sounding annoyed"
-    },
-    {
-      "error_id": "misaligned_chin",
-      "description": "Patient places chin incorrectly or lifts head too high",
-      "likely_trigger": "unclear positioning instructions",
-      "patient_response": "Like this? I am not sure if I am doing it right.",
-      "best_tech_response_goal": "Give simple, specific correction using directional language"
-    },
-    {
-      "error_id": "looking_around",
-      "description": "Patient looks around instead of holding fixation",
-      "likely_trigger": "unclear explanation of target",
-      "patient_response": "Am I supposed to keep looking at that green light?",
-      "best_tech_response_goal": "Redirect fixation clearly and confidently"
-    },
-    {
-      "error_id": "blinking_during_capture",
-      "description": "Patient blinks at the wrong moment and interrupts capture",
-      "likely_trigger": "not prepared for capture timing",
-      "patient_response": "Oh sorry, I blinked.",
-      "best_tech_response_goal": "Normalize the mistake and reset without creating pressure"
-    },
-    {
-      "error_id": "moves_too_soon",
-      "description": "Patient moves before capture is complete",
-      "likely_trigger": "tech did not signal when the image was finished",
-      "patient_response": "Was that it? I thought you were done.",
-      "best_tech_response_goal": "Clarify timing and set expectation before retrying"
+  "procedural_guidance": {
+    "training_mode": "step_by_step_positioning",
+    "learner_goal": [
+      "Position the patient correctly",
+      "Give clear, calm step-by-step instructions",
+      "Correct mistakes without sounding frustrated",
+      "Keep the patient engaged and cooperative until capture is complete"
+    ],
+    "ideal_sequence": [
+      "Explain the test briefly in patient-friendly language",
+      "Reassure the patient that the machine will not touch the eye",
+      "Direct the patient where to place chin and forehead",
+      "Guide head positioning",
+      "Tell the patient where to look",
+      "Instruct the patient to hold still and blink normally unless told otherwise",
+      "Prepare the patient for the capture moment",
+      "Correct positioning or fixation issues as needed"
+    ],
+    "common_patient_errors": [
+      {
+        "error_id": "pulls_back_from_machine",
+        "description": "Patient leans away slightly when the machine gets close",
+        "likely_trigger": "anxiety or unclear reassurance",
+        "patient_response": "Sorry, I just do not like things that close to my eye.",
+        "best_tech_response_goal": "Reassure calmly and re-direct positioning without sounding annoyed"
+      },
+      {
+        "error_id": "misaligned_chin",
+        "description": "Patient places chin incorrectly or lifts head too high",
+        "likely_trigger": "unclear positioning instructions",
+        "patient_response": "Like this? I am not sure if I am doing it right.",
+        "best_tech_response_goal": "Give simple, specific correction using directional language"
+      },
+      {
+        "error_id": "looking_around",
+        "description": "Patient looks around instead of holding fixation",
+        "likely_trigger": "unclear explanation of target",
+        "patient_response": "Am I supposed to keep looking at that green light?",
+        "best_tech_response_goal": "Redirect fixation clearly and confidently"
+      },
+      {
+        "error_id": "blinking_during_capture",
+        "description": "Patient blinks at the wrong moment and interrupts capture",
+        "likely_trigger": "not prepared for capture timing",
+        "patient_response": "Oh sorry, I blinked.",
+        "best_tech_response_goal": "Normalize the mistake and reset without creating pressure"
+      },
+      {
+        "error_id": "moves_too_soon",
+        "description": "Patient moves before capture is complete",
+        "likely_trigger": "tech did not signal when the image was finished",
+        "patient_response": "Was that it? I thought you were done.",
+        "best_tech_response_goal": "Clarify timing and set expectation before retrying"
+      }
+    ],
+    "correction_rules": {
+      "if_learner_is_clear_and_reassuring": "Patient becomes more cooperative and positioning improves",
+      "if_learner_is_vague": "Patient becomes more confused and needs more prompting",
+      "if_learner_is_rushed_or_irritated": "Patient becomes less confident and makes more mistakes",
+      "if_learner_normalizes_errors": "Patient relaxes and follows instructions better"
     }
-  ],
-  "correction_rules": {
-    "if_learner_is_clear_and_reassuring": "Patient becomes more cooperative and positioning improves",
-    "if_learner_is_vague": "Patient becomes more confused and needs more prompting",
-    "if_learner_is_rushed_or_irritated": "Patient becomes less confident and makes more mistakes",
-    "if_learner_normalizes_errors": "Patient relaxes and follows instructions better"
+  },
+  "ui_support": {
+    "enabled": true,
+    "initial_view": {
+      "image_key": "oct_positioning_screen_01",
+      "description": "Patient is positioned at OCT with fixation target visible"
+    },
+    "visual_events": [
+      {
+        "event_id": "pulls_back_from_machine",
+        "image_key": "oct_patient_pulled_back_01",
+        "description": "Patient leans away from machine"
+      },
+      {
+        "event_id": "misaligned_chin",
+        "image_key": "oct_chin_too_high_01",
+        "description": "Chin not properly aligned"
+      },
+      {
+        "event_id": "looking_around",
+        "image_key": "oct_fixation_lost_01",
+        "description": "Patient not maintaining fixation"
+      },
+      {
+        "event_id": "blinking_during_capture",
+        "image_key": "oct_blink_interrupt_01",
+        "description": "Blink interrupts capture"
+      },
+      {
+        "event_id": "moves_too_soon",
+        "image_key": "oct_motion_blur_01",
+        "description": "Movement causes blurred capture"
+      }
+    ]
   }
 }
