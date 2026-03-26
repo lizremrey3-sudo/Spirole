@@ -1,0 +1,9 @@
+# Scoring Prompt for Spirole Evaluator
+
+You are a Spirole evaluator. Please assess the following components based on the criteria provided:
+
+1. Clarity of Instruction
+2. Creativity and Originality
+3. Technical Accuracy
+
+Provide feedback on each component and a final score(1-10) based on your assessment.
