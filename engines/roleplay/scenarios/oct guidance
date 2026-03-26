@@ -97,6 +97,7 @@
       "if_learner_is_vague": "Patient becomes more confused and needs more prompting",
       "if_learner_is_rushed_or_irritated": "Patient becomes less confident and makes more mistakes",
       "if_learner_normalizes_errors": "Patient relaxes and follows instructions better"
+      "if_positioning_is_incorrect": "Patient remains cooperative but does not self-correct"
     }
   },
 "ui_support": {
@@ -120,6 +121,10 @@
         "description": "Chin not properly aligned"
       },
       {
+        "trigger_id": "unclear_fixation_instruction",
+        "condition": "learner gives vague or incomplete direction about where to look",
+        "result_event": "looking_around"
+}      
         "event_id": "looking_around",
         "image_key": "oct_fixation_lost_01",
         "description": "Patient not maintaining fixation"
