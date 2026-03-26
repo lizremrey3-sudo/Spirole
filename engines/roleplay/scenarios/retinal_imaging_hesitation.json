@@ -1,0 +1,5 @@
+{
+  "scenario": "retinal_imaging_hesitation",
+  "description": "Patient hesitant about retinal imaging procedures",
+  "context": "Patient expresses concerns or reluctance about imaging procedures"
+}
