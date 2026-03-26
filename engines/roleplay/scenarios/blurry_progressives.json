@@ -1,0 +1,5 @@
+{
+  "scenario": "blurry_progressives",
+  "description": "Patient with blurry vision in progressive lenses",
+  "context": "Patient reports difficulty with progressive lens adaptation"
+}
