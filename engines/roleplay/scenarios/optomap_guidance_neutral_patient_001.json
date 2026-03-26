@@ -1,0 +1,162 @@
+{
+  "scenario_id": "optomap_guidance_neutral_patient_001",
+  "title": "Technician guides patient through Optomap retinal imaging",
+  "role": "patient",
+  "setting": "pretesting room",
+  "difficulty": "beginner",
+  "persona": {
+    "age_range": "45-75",
+    "emotional_state": "neutral",
+    "communication_style": "cooperative and quiet",
+    "patience_level": "moderate"
+  },
+  "background": {
+    "chief_concern": "Patient is here for routine retinal imaging and is willing to follow instructions",
+    "prior_experience": "limited"
+  },
+  "hidden_facts": [
+    "The patient will generally follow instructions without offering much feedback",
+    "The patient will not usually recognize alignment or capture problems unless they are very obvious",
+    "The technician is expected to lead positioning, fixation, and any necessary retakes"
+  ],
+  "patient_opening_line": "Okay.",
+  "learner_objective": [
+    "Explain the Optomap retinal image briefly and clearly",
+    "Position the patient correctly",
+    "Guide fixation and lid control as needed",
+    "Recognize poor captures and decide whether to retake them",
+    "Communicate retakes confidently without creating unnecessary concern"
+  ],
+  "success_markers": [
+    "Explains the test simply and confidently",
+    "Guides the patient into proper position before capture",
+    "Recognizes when the image quality is poor",
+    "Retakes the image when needed",
+    "Maintains patient trust during redirection or retakes"
+  ],
+  "failure_patterns": [
+    "Gives vague positioning instructions",
+    "Fails to notice poor image quality",
+    "Accepts a poor image and moves on",
+    "Does not manage eyelids appropriately when needed",
+    "Sounds uncertain when explaining a retake"
+  ],
+  "procedural_guidance": {
+    "training_mode": "capture_and_retake_decision",
+    "learner_goal": [
+      "Guide the patient into correct position",
+      "Capture a usable image",
+      "Recognize when the capture is poor",
+      "Redo the image when appropriate"
+    ],
+    "ideal_sequence": [
+      "Explain the retinal image briefly in patient-friendly language",
+      "Direct the patient into correct position at the device",
+      "Guide where to look",
+      "Capture the image",
+      "Review the image quality",
+      "If image quality is poor, explain the need to retake and reposition the patient",
+      "Repeat until a usable image is obtained"
+    ],
+    "common_patient_errors": [
+      {
+        "error_id": "too_close_capture",
+        "description": "Patient is too close to the device, leading to a distorted or unusable image",
+        "likely_trigger": "learner gives incomplete or unclear positioning guidance",
+        "patient_response": "",
+        "best_tech_response_goal": "Recognize the poor capture and calmly reposition the patient for a retake"
+      },
+      {
+        "error_id": "too_far_capture",
+        "description": "Patient is too far from the device, reducing image quality or capture accuracy",
+        "likely_trigger": "learner does not guide the patient close enough before capture",
+        "patient_response": "",
+        "best_tech_response_goal": "Recognize the poor capture and guide the patient closer before retaking"
+      },
+      {
+        "error_id": "too_much_eyelid",
+        "description": "Upper eyelid obstructs part of the retinal image",
+        "likely_trigger": "learner does not manage lids or direct the patient appropriately",
+        "patient_response": "",
+        "best_tech_response_goal": "Recognize lid obstruction and give calm, clear instructions to improve the image"
+      }
+    ],
+    "correction_rules": {
+      "if_capture_is_poor": "Patient remains neutral and assumes the test is complete unless guided otherwise",
+      "if_learner_recognizes_the_problem": "Patient stays cooperative and follows repositioning instructions",
+      "if_learner_misses_the_problem": "Patient does not question image quality and remains ready to move on",
+      "if_retake_is_needed": "Patient accepts the redo if the technician communicates it calmly and clearly"
+    }
+  },
+  "trigger_logic": {
+    "instruction_quality_rules": [
+      {
+        "trigger_id": "poor_distance_guidance_close",
+        "condition": "learner does not clearly guide patient position before capture and patient ends up too close",
+        "result_event": "too_close_capture",
+        "timing": "after_capture"
+      },
+      {
+        "trigger_id": "poor_distance_guidance_far",
+        "condition": "learner does not clearly guide patient position before capture and patient ends up too far away",
+        "result_event": "too_far_capture",
+        "timing": "after_capture"
+      },
+      {
+        "trigger_id": "missed_lid_management",
+        "condition": "learner does not address eyelid interference when needed",
+        "result_event": "too_much_eyelid",
+        "timing": "after_capture"
+      }
+    ]
+  },
+  "ui_support": {
+    "enabled": true,
+    "patient_intro_image": {
+      "image_key": "patient_female_older_anxious_01.jpg"
+    },
+    "initial_view": {
+      "image_key": "correct image.png",
+      "description": "Starting reference image for a usable Optomap capture"
+    },
+    "visual_events": [
+      {
+        "event_id": "too_close_capture",
+        "image_key": "patient too close.png",
+        "internal_description": "Captured image shows distortion from patient being too close"
+      },
+      {
+        "event_id": "too_far_capture",
+        "image_key": "too far away.png",
+        "internal_description": "Captured image reflects patient being too far from the device"
+      },
+      {
+        "event_id": "too_much_eyelid",
+        "image_key": "too much eyelid.png",
+        "internal_description": "Captured image is obstructed by excessive eyelid"
+      },
+      {
+        "event_id": "movement_during_capture",
+        "image_key": "movement.png",
+        "internal_description": "Captured image shows motion artifact"
+      },
+      {
+        "event_id": "blink_during_capture",
+        "image_key": "blinkk.png",
+        "internal_description": "Captured image is affected by blinking"
+      },
+      {
+        "event_id": "nose_pressed_against_facepad",
+        "image_key": "nose pressed agaist facepad.png",
+        "internal_description": "Patient positioning against the facepad is incorrect"
+      }
+    ]
+  },
+  "evaluation_tags": [
+    "optomap",
+    "retinal_imaging",
+    "image_quality_recognition",
+    "redo_decision",
+    "patient_guidance"
+  ]
+}
