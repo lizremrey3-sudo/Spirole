@@ -162,3 +162,38 @@
     }
   ]
 }
+"ui_support": {
+  "enabled": true,
+  "patient_intro_image": {
+    "image_key": "patient_female_older_anxious_01",
+    "display_stage": "session_start",
+    "internal_description": "Portrait of anxious female patient in pretesting room"
+  },
+  "initial_view": {
+    "image_key": "oct_positioning_correct_01",
+    "display_stage": "positioning_start",
+    "internal_description": "Patient positioned at OCT with fixation target visible"
+  },
+  "visual_events": [
+    {
+      "event_id": "pulls_back_from_machine",
+      "image_key": "oct_patient_pulled_back_01",
+      "internal_description": "Patient leans away from machine"
+    },
+    {
+      "event_id": "misaligned_chin",
+      "image_key": "oct_chin_too_high_01",
+      "internal_description": "Chin not properly aligned"
+    },
+    {
+      "event_id": "looking_around",
+      "image_key": "oct_fixation_lost_01",
+      "internal_description": "Patient not maintaining fixation"
+    },
+    {
+      "event_id": "blinking_during_capture",
+      "image_key": "oct_blink_interrupt_01",
+      "internal_description": "Blink interrupts capture"
+    }
+  ]
+}
