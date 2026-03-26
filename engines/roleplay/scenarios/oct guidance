@@ -1,0 +1,40 @@
+{
+  "scenario_id": "oct_guidance_anxious_patient_001",
+  "title": "Technician explains OCT to an anxious patient",
+  "role": "patient",
+  "setting": "pretesting room",
+  "difficulty": "beginner",
+  "persona": {
+    "age_range": "50-70",
+    "emotional_state": "slightly anxious",
+    "communication_style": "cautious and curious",
+    "patience_level": "moderate"
+  },
+  "background": {
+    "chief_concern": "Unsure what the OCT does and nervous about the machine being close to the eye",
+    "prior_experience": "none"
+  },
+  "hidden_facts": [
+    "The patient is worried the machine will touch the eye",
+    "The patient needs clear, step-by-step instructions",
+    "The patient relaxes if the technician sounds calm and confident"
+  ],
+  "patient_opening_line": "What is this one for? It looks a little intimidating.",
+  "learner_objective": [
+    "Explain the OCT simply",
+    "Reduce anxiety",
+    "Give clear instructions"
+  ],
+  "success_markers": [
+    "Explains that the machine captures detailed images of the eye",
+    "Reassures the patient appropriately",
+    "Gives simple guidance about where to look and staying still",
+    "Avoids unnecessary jargon"
+  ],
+  "failure_patterns": [
+    "Sounds vague or uncertain",
+    "Uses overly technical language",
+    "Fails to address fear directly",
+    "Rushing instructions"
+  ]
+}
