@@ -134,3 +134,31 @@
     ]
   }
 }
+"trigger_logic": {
+  "instruction_quality_rules": [
+    {
+      "trigger_id": "skip_positioning",
+      "condition": "learner does not instruct chin or forehead placement before capture guidance",
+      "result_event": "misaligned_chin",
+      "timing": "immediate"
+    },
+    {
+      "trigger_id": "unclear_fixation_instruction",
+      "condition": "learner gives vague or incomplete direction about where to look",
+      "result_event": "looking_around",
+      "timing": "next_step"
+    },
+    {
+      "trigger_id": "no_capture_preparation",
+      "condition": "learner does not prepare patient to hold still or expect capture timing",
+      "result_event": "blinking_during_capture",
+      "timing": "during_capture"
+    },
+    {
+      "trigger_id": "rushed_guidance",
+      "condition": "learner gives overly rushed or fragmented positioning instructions",
+      "result_event": "pulls_back_from_machine",
+      "timing": "during_positioning"
+    }
+  ]
+}
