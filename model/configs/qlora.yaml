@@ -1,0 +1,68 @@
+# QLoRA training configuration via Unsloth
+# Hardware target: NVIDIA RTX 5050 (8GB GDDR7)
+
+lora:
+  r: 16                       # LoRA rank — good balance of expressiveness and memory
+  lora_alpha: 32              # Typically 2x rank; controls effective learning rate scaling
+  lora_dropout: 0.05          # Light dropout — small dataset, avoid overfitting
+  bias: "none"                # Standard for QLoRA
+  use_gradient_checkpointing: "unsloth"  # Unsloth's optimized checkpointing (cuts VRAM ~30%)
+  random_state: 42
+  use_rslora: false           # Rank-stabilized LoRA; not needed at rank 16
+  loftq_config: null
+
+  # Target modules for Llama 3.1 — attention projections + feedforward gates
+  # These are the most impactful layers for learning conversation style
+  target_modules:
+    - "q_proj"
+    - "k_proj"
+    - "v_proj"
+    - "o_proj"
+    - "gate_proj"
+    - "up_proj"
+    - "down_proj"
+
+training:
+  # Batch settings — RTX 5050 with 8GB, 4-bit quant, seq len 2048
+  per_device_train_batch_size: 2
+  gradient_accumulation_steps: 4   # Effective batch size = 8
+  warmup_steps: 10
+  max_steps: 200                    # Adjust upward once you have >500 training examples
+  # Alternatively use num_train_epochs: 3 and comment out max_steps
+
+  learning_rate: 2.0e-4
+  fp16: true
+  bf16: false
+  logging_steps: 10
+  optim: "adamw_8bit"               # 8-bit Adam — reduces optimizer memory ~4x
+  weight_decay: 0.01
+  lr_scheduler_type: "cosine"
+  seed: 42
+
+  output_dir: "model/adapters/"
+  save_strategy: "steps"
+  save_steps: 50
+  save_total_limit: 2               # Keep only the 2 most recent checkpoints
+
+  # Dataset packing — pack multiple short examples into one sequence for efficiency
+  # Set to false if your transcripts are consistently long
+  packing: false
+
+  # Response-only training: only compute loss on the Customer/patient turns,
+  # not the Associate prompts. This is what we want — teach the model to
+  # respond like a patient, not to predict learner behavior.
+  train_on_responses_only: true
+  # Llama 3.1 Instruct uses these header tokens to delimit turns
+  instruction_part: "<|start_header_id|>user<|end_header_id|>\n\n"
+  response_part: "<|start_header_id|>assistant<|end_header_id|>\n\n"
+
+evaluation:
+  # Hold out 10% of formatted data for validation loss tracking
+  eval_split: 0.1
+  eval_steps: 50
+
+dataset:
+  # Format expected by the training script after format_transcripts.py
+  # Each row: {"conversations": [{"from": "system"|"human"|"gpt", "value": "..."}]}
+  format: "sharegpt"
+  split: "train"

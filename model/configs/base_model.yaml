@@ -1,0 +1,38 @@
+# Base model configuration for Spirole fine-tuning
+# Target: Llama 3.1 8B Instruct via Unsloth
+
+model:
+  # Hugging Face model ID — use the Instruct variant so the chat template
+  # is already baked in. Unsloth hosts a pre-patched copy for faster loading.
+  name: "unsloth/Meta-Llama-3.1-8B-Instruct"
+  # Fallback if unsloth hub is unavailable
+  hf_name: "meta-llama/Meta-Llama-3.1-8B-Instruct"
+  max_seq_length: 2048        # Max tokens per training example (covers ~15-turn sessions)
+  dtype: null                 # null = auto-detect (float16 on RTX 5050)
+  load_in_4bit: true          # 4-bit quantization — required for 8GB VRAM
+
+paths:
+  # Where formatted training data lands after format_transcripts.py
+  sft_data: "datasets/training/sft_data.jsonl"
+  rlhf_data: "datasets/training/rlhf_pairs.jsonl"
+  # Raw transcript input directory
+  transcripts: "datasets/transcripts/"
+  # LoRA adapters saved here after training
+  adapters: "model/adapters/"
+  # Final merged model (optional export step)
+  exports: "model/exports/"
+
+hardware:
+  # NVIDIA RTX 5050 (8GB GDDR7 laptop GPU)
+  # 4-bit quant + rank-16 LoRA fits comfortably in ~6GB
+  device: "cuda"
+  fp16: true                  # RTX 5050 supports fp16 natively
+  bf16: false                 # bf16 requires Ampere+ at full support; fp16 safer here
+
+chat_template:
+  # Llama 3.1 uses a specific instruct template. Unsloth handles this
+  # automatically via get_chat_template("llama-3.1").
+  # The system role maps to the Spirole roleplay system prompt + scenario.
+  system_role: "system"
+  user_role: "human"          # Associate turn (the learner)
+  assistant_role: "gpt"       # Customer/patient turn (what we're training)
