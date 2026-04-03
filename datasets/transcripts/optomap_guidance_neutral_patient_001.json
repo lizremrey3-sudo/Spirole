@@ -1,0 +1,27 @@
+{
+  "scenario_id": "optomap_guidance_neutral_patient_001",
+  "transcript": [
+    {"role": "Associate", "text": "Hi there, I'm going to be taking your retinal images today. Have you had this done before?"},
+    {"role": "Customer", "text": "No, I don't think so."},
+    {"role": "Associate", "text": "No worries. It's quick and painless — no drops needed. I'm going to have you look into this camera here. Go ahead and put your chin on the rest and your forehead against the bar."},
+    {"role": "Customer", "text": "Okay. Like this?"},
+    {"role": "Associate", "text": "Almost — scoot in just a little closer. There you go. Now I need you to look straight at the green dot you see inside. Try to keep your eye as wide open as you can."},
+    {"role": "Customer", "text": "Okay."},
+    {"role": "Associate", "text": "Perfect. I'm going to take the image now — hold still."},
+    {"role": "Customer", "text": "Mm-hmm."},
+    {"role": "Associate", "text": "Actually, that one came out a little dark — your eyelid was covering part of the image. Can you open your eye a bit wider this time? I'll have you lift your brow slightly if that helps."},
+    {"role": "Customer", "text": "Oh sure, sorry about that."},
+    {"role": "Associate", "text": "No need to apologize at all, it happens. Okay, same thing — look at the green dot, eye wide open."},
+    {"role": "Customer", "text": "Okay."},
+    {"role": "Associate", "text": "Got it — that one looks great. Now let's do your left eye."},
+    {"role": "Customer", "text": "Alright."}
+  ],
+  "scores": {
+    "objective_completion": 9,
+    "empathy": 8,
+    "product_knowledge": 8,
+    "communication_clarity": 9,
+    "confidence": 8,
+    "total_score": 42
+  }
+}

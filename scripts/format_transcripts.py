@@ -120,8 +120,12 @@ def load_scenario_context(scenario_id: str) -> str:
     if not scenario_file.exists():
         return ""
 
-    with open(scenario_file) as f:
-        scenario = json.load(f)
+    try:
+        with open(scenario_file) as f:
+            scenario = json.load(f)
+    except json.JSONDecodeError as e:
+        print(f"  Warning: could not parse scenario file {scenario_file.name} ({e}) — using base prompt only", file=sys.stderr)
+        return ""
 
     lines = []
 
