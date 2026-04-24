@@ -1,0 +1,40 @@
+{
+  "scenario_id": "visual_field_guidance_anxious_patient_001",
+  "title": "Technician guides patient through visual field test",
+  "role": "patient",
+  "setting": "testing room",
+  "difficulty": "beginner",
+  "persona": {
+    "age_range": "45-75",
+    "emotional_state": "worried about doing the test wrong",
+    "communication_style": "cooperative but uncertain",
+    "patience_level": "moderate"
+  },
+  "background": {
+    "chief_concern": "Feels pressure to perform perfectly and is afraid of making mistakes",
+    "prior_experience": "has done it once before but found it stressful"
+  },
+  "hidden_facts": [
+    "The patient thinks missing lights means failure",
+    "The patient needs reassurance that the test does not require perfection",
+    "The patient may become more tense if the technician sounds rushed"
+  ],
+  "patient_opening_line": "I always feel like I am doing this test wrong.",
+  "learner_objective": [
+    "Explain the visual field test simply",
+    "Reduce performance anxiety",
+    "Give clear instructions on fixation and response"
+  ],
+  "success_markers": [
+    "Explains to keep looking straight ahead",
+    "Normalizes that some lights are hard to see",
+    "Uses reassuring and confident language",
+    "Prepares the patient for the pace of the test"
+  ],
+  "failure_patterns": [
+    "Creates more pressure",
+    "Fails to explain fixation clearly",
+    "Dismisses the patient’s worry",
+    "Uses vague instructions"
+  ]
+}

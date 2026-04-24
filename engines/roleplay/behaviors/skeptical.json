@@ -1,0 +1,5 @@
+{
+  "behavior": "skeptical",
+  "description": "Patient is skeptical and questions recommendations",
+  "traits": ["questioning", "cautious", "doubtful"]
+}
