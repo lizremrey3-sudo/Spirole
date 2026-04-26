@@ -3,11 +3,19 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import ScoreChart from './score-chart'
 import DashboardNav from '../dashboard-nav'
+import ScenariosPanel from '../scenarios-panel'
 
 type EvalResult = {
   scores: Record<string, { score: number; rationale: string }>
   overall_feedback: string
   rubric_dimensions?: { name: string; weight: number; description: string }[]
+}
+
+type ScenarioRow = {
+  id: string
+  title: string
+  description: string | null
+  associate_type: 'manager' | 'optician' | 'technician' | 'receptionist'
 }
 
 function scoreColor(s: number) {
@@ -24,12 +32,21 @@ export default async function AssociatePage() {
   const { data: subscription } = await supabase.from('subscriptions').select('status').maybeSingle()
   if (!subscription || subscription.status === 'inactive') redirect('/pricing')
 
-  const { data: raw } = await supabase
-    .from('sessions')
-    .select('id, score, feedback, completed_at, scenarios(title)')
-    .eq('user_id', user.id)
-    .eq('status', 'completed')
-    .order('completed_at', { ascending: true })
+  const [{ data: raw }, { data: scenariosRaw }] = await Promise.all([
+    supabase
+      .from('sessions')
+      .select('id, score, feedback, completed_at, scenarios(title)')
+      .eq('user_id', user.id)
+      .eq('status', 'completed')
+      .order('completed_at', { ascending: true }),
+    supabase
+      .from('scenarios')
+      .select('id, title, description, associate_type')
+      .eq('is_active', true)
+      .order('title'),
+  ])
+
+  const scenarios = (scenariosRaw ?? []) as ScenarioRow[]
 
   const sessions = (raw ?? []).map(s => {
     const scenarioRaw = Array.isArray(s.scenarios) ? s.scenarios[0] : s.scenarios
@@ -53,41 +70,34 @@ export default async function AssociatePage() {
     <div className="flex min-h-full flex-col bg-[#0a0e1a]">
       <DashboardNav email={user.email ?? ''} />
 
-      <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-10">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-white">My Sessions</h1>
-            <p className="mt-1 text-sm text-white/50">
-              {sessions.length === 0
-                ? 'No completed sessions yet.'
-                : `${sessions.length} completed session${sessions.length === 1 ? '' : 's'}`}
-            </p>
-          </div>
-          <Link
-            href="/dashboard"
-            className="rounded-md bg-[#2dd4bf] px-4 py-2 text-sm font-medium text-[#0a0e1a] transition-colors hover:bg-[#2dd4bf]/80"
-          >
-            Start New Session
-          </Link>
+      <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-10">
+
+        {/* Scenarios */}
+        <div className="mb-10 rounded-xl border border-white/10 bg-[#111827] p-6">
+          <ScenariosPanel scenarios={scenarios} />
+        </div>
+
+        {/* Session history */}
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="text-base font-semibold text-white">
+            Session History
+            {sessions.length > 0 && (
+              <span className="ml-2 text-sm font-normal text-white/40">
+                {sessions.length} completed
+              </span>
+            )}
+          </h2>
         </div>
 
         {chartData.length > 0 && (
-          <div className="mb-8">
+          <div className="mb-6">
             <ScoreChart data={chartData} />
           </div>
         )}
 
         {displaySessions.length === 0 ? (
           <div className="rounded-xl border border-white/10 bg-[#111827] px-6 py-12 text-center">
-            <p className="text-sm text-white/50">
-              Complete a session to see your history here.
-            </p>
-            <Link
-              href="/dashboard"
-              className="mt-4 inline-block rounded-md bg-[#2dd4bf] px-4 py-2 text-sm font-medium text-[#0a0e1a] hover:bg-[#2dd4bf]/80"
-            >
-              Start a Session
-            </Link>
+            <p className="text-sm text-white/50">Complete a session to see your history here.</p>
           </div>
         ) : (
           <div className="flex flex-col gap-3">

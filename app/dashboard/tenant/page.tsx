@@ -2,7 +2,6 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import DashboardNav from '@/app/dashboard/dashboard-nav'
 import AssessmentPanel from '@/app/dashboard/assessment-panel'
-import ScenariosPanel from '@/app/dashboard/scenarios-panel'
 import PracticeTrendChart from './practice-trend-chart'
 import type { AssessmentContent } from '@/app/actions/assessments'
 
@@ -45,7 +44,7 @@ export default async function TenantDashboard() {
   const tenantId = profile.tenant_id as string
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
 
-  const [tenantResult, sessionsResult, scenariosResult, assessmentResult] = await Promise.all([
+  const [tenantResult, sessionsResult, assessmentResult] = await Promise.all([
     supabase.from('tenants').select('name').eq('id', tenantId).single(),
     supabase
       .from('sessions')
@@ -54,12 +53,6 @@ export default async function TenantDashboard() {
       .eq('status', 'completed')
       .gte('completed_at', thirtyDaysAgo)
       .not('score', 'is', null),
-    supabase
-      .from('scenarios')
-      .select('id, title, description, associate_type')
-      .eq('tenant_id', tenantId)
-      .eq('is_active', true)
-      .order('title'),
     supabase
       .from('assessments')
       .select('content, generated_at')
@@ -76,8 +69,6 @@ export default async function TenantDashboard() {
     completed_at: string
     scenarios: { associate_type: string } | { associate_type: string }[] | null
   }[]
-  type ScenarioRow = { id: string; title: string; description: string | null; associate_type: 'manager' | 'optician' | 'technician' | 'receptionist' }
-  const scenarios = (scenariosResult.data ?? []) as ScenarioRow[]
   const cachedAssessment = assessmentResult.data as { content: AssessmentContent; generated_at: string } | null
 
   const bins = computeWeekBins()
@@ -167,11 +158,6 @@ export default async function TenantDashboard() {
             ) : (
               <p className="py-8 text-center text-sm text-white/40">No session data in this period.</p>
             )}
-          </div>
-
-          {/* Scenarios */}
-          <div className="rounded-xl border border-white/10 bg-[#111827] p-6">
-            <ScenariosPanel scenarios={scenarios} />
           </div>
 
           <AssessmentPanel

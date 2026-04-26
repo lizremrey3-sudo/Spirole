@@ -4,7 +4,6 @@ import { createClient } from '@/lib/supabase/server'
 import DashboardNav from '@/app/dashboard/dashboard-nav'
 import AssessmentPanel from '@/app/dashboard/assessment-panel'
 import TrendChart from './trend-chart'
-import ScenariosPanel from '@/app/dashboard/scenarios-panel'
 import type { AssessmentContent } from '@/app/actions/assessments'
 
 const ASSOCIATE_TYPES = [
@@ -73,7 +72,7 @@ export default async function ManagerDashboard() {
   const tenantId = profile.tenant_id as string
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
 
-  const [tenantResult, sessionsResult, lcScenariosResult, assessmentResult] = await Promise.all([
+  const [tenantResult, sessionsResult, assessmentResult] = await Promise.all([
     supabase.from('tenants').select('name').eq('id', tenantId).single(),
     supabase
       .from('sessions')
@@ -82,12 +81,6 @@ export default async function ManagerDashboard() {
       .eq('status', 'completed')
       .gte('completed_at', thirtyDaysAgo)
       .not('score', 'is', null),
-    supabase
-      .from('scenarios')
-      .select('id, title, description, associate_type')
-      .eq('tenant_id', tenantId)
-      .eq('is_active', true)
-      .order('title'),
     supabase
       .from('assessments')
       .select('content, generated_at')
@@ -100,8 +93,6 @@ export default async function ManagerDashboard() {
 
   const practiceName = (tenantResult.data?.name as string | null) ?? 'My Practice'
   const sessions = (sessionsResult.data ?? []) as SessionRow[]
-  type ScenarioRow = { id: string; title: string; description: string | null; associate_type: 'manager' | 'optician' | 'technician' | 'receptionist' }
-  const allScenarios = (lcScenariosResult.data ?? []) as ScenarioRow[]
   const cachedAssessment = assessmentResult.data as {
     content: AssessmentContent; generated_at: string
   } | null
@@ -172,11 +163,6 @@ export default async function ManagerDashboard() {
             <h2 className="mb-1 text-sm font-semibold text-[#2dd4bf]">Score Trend</h2>
             <p className="mb-4 text-xs text-white/40">Weekly average — {practiceName}, last 30 days</p>
             <TrendChart data={weeklyData} />
-          </div>
-
-          {/* Scenarios */}
-          <div className="rounded-xl border border-white/10 bg-[#111827] p-6">
-            <ScenariosPanel scenarios={allScenarios} />
           </div>
 
           <AssessmentPanel
