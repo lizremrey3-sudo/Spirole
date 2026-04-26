@@ -33,10 +33,10 @@ export default function CommitmentForm() {
   return (
     <div className="flex flex-col gap-4">
       {state?.error && (
-        <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{state.error}</p>
+        <p className="rounded-md bg-red-900/40 px-3 py-2 text-sm text-red-300">{state.error}</p>
       )}
       {state?.message && (
-        <p className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-700">{state.message}</p>
+        <p className="rounded-md bg-[#2dd4bf]/10 px-3 py-2 text-sm text-[#2dd4bf]">{state.message}</p>
       )}
 
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -48,8 +48,8 @@ export default function CommitmentForm() {
             className={[
               'rounded-xl border p-4 text-left text-sm leading-snug transition-all',
               selected === prompt
-                ? 'border-zinc-900 bg-zinc-900 text-white'
-                : 'border-zinc-200 bg-white text-zinc-700 hover:border-zinc-400',
+                ? 'border-[#2dd4bf] bg-[#2dd4bf]/10 text-[#2dd4bf]'
+                : 'border-white/10 bg-white/5 text-white/70 hover:border-white/20 hover:bg-white/10',
             ].join(' ')}
           >
             {prompt}
@@ -67,13 +67,13 @@ export default function CommitmentForm() {
             placeholder="Write your response here…"
             rows={4}
             required
-            className="w-full rounded-xl border border-zinc-300 px-4 py-3 text-sm leading-relaxed text-zinc-900 outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500"
+            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm leading-relaxed text-white placeholder-white/30 outline-none focus:border-[#2dd4bf]/60 focus:ring-1 focus:ring-[#2dd4bf]/40"
           />
           <div className="flex justify-end">
             <button
               type="submit"
               disabled={isPending || !response.trim()}
-              className="rounded-md bg-zinc-900 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 disabled:opacity-50"
+              className="rounded-md bg-[#2dd4bf] px-5 py-2 text-sm font-medium text-[#0a0e1a] transition-colors hover:bg-[#2dd4bf]/80 disabled:opacity-50"
             >
               {isPending ? 'Saving…' : 'Save commitment'}
             </button>

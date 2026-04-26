@@ -24,7 +24,7 @@ export default function CommitmentsHistory({ commitments }: { commitments: Commi
   const dates = Object.keys(byDate)
 
   if (dates.length === 0) {
-    return <p className="text-sm text-zinc-400">No saved commitments yet.</p>
+    return <p className="text-sm text-white/40">No saved commitments yet.</p>
   }
 
   const open = selected ? byDate[selected] : null
@@ -36,10 +36,10 @@ export default function CommitmentsHistory({ commitments }: { commitments: Commi
           <li key={date}>
             <button
               onClick={() => setSelected(date)}
-              className="flex w-full items-center justify-between rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-left transition-colors hover:border-zinc-300 hover:bg-white"
+              className="flex w-full items-center justify-between rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-left transition-colors hover:border-[#2dd4bf]/40 hover:bg-[#2dd4bf]/5"
             >
-              <span className="text-sm font-medium text-zinc-800">{date}</span>
-              <span className="text-xs text-zinc-400">
+              <span className="text-sm font-medium text-white">{date}</span>
+              <span className="text-xs text-white/40">
                 {byDate[date].length} commitment{byDate[date].length !== 1 ? 's' : ''}
               </span>
             </button>
@@ -51,15 +51,15 @@ export default function CommitmentsHistory({ commitments }: { commitments: Commi
       {open && selected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setSelected(null)}
           />
-          <div className="relative w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
+          <div className="relative w-full max-w-lg rounded-2xl border border-white/10 bg-[#111827] p-6 shadow-2xl">
             <div className="mb-5 flex items-center justify-between">
-              <h3 className="font-semibold text-zinc-900">{selected}</h3>
+              <h3 className="font-semibold text-white">{selected}</h3>
               <button
                 onClick={() => setSelected(null)}
-                className="rounded-md p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700"
+                className="rounded-md p-1 text-white/40 hover:bg-white/10 hover:text-white"
                 aria-label="Close"
               >
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -69,9 +69,9 @@ export default function CommitmentsHistory({ commitments }: { commitments: Commi
             </div>
             <div className="flex flex-col gap-4 overflow-y-auto" style={{ maxHeight: '60vh' }}>
               {open.map((c, i) => (
-                <div key={c.id ?? i} className="rounded-xl border border-zinc-100 bg-zinc-50 p-4">
-                  <p className="mb-2 text-xs font-semibold text-zinc-500">{c.prompt}</p>
-                  <p className="text-sm leading-relaxed text-zinc-900">{c.response}</p>
+                <div key={c.id ?? i} className="rounded-xl border border-white/10 bg-white/5 p-4">
+                  <p className="mb-2 text-xs font-semibold text-[#2dd4bf]">{c.prompt}</p>
+                  <p className="text-sm leading-relaxed text-white/80">{c.response}</p>
                 </div>
               ))}
             </div>
