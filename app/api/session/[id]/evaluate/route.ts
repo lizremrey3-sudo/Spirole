@@ -75,6 +75,8 @@ Return your evaluation as a valid JSON object with this exact structure:
   "improvements": ["<specific improvement 1>", "<specific improvement 2>"]
 }
 
+Do not evaluate or penalize punctuation, grammar, or spelling. Evaluate only communication quality, content, and interpersonal skills.
+
 Return ONLY the JSON object with no additional text or markdown.`
 }
 

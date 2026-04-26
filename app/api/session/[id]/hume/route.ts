@@ -80,14 +80,17 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id: sessionId } = await params
+  console.log('[Hume] POST /api/session/' + sessionId + '/hume')
 
-  if (!HUME_API_KEY) return new Response('Hume API not configured', { status: 503 })
+  if (!HUME_API_KEY) {
+    console.error('[Hume] HUME_API_KEY not set')
+    return new Response('Hume API not configured', { status: 503 })
+  }
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return new Response('Unauthorized', { status: 401 })
 
-  // Verify session ownership and fetch current feedback
   const { data: session } = await supabase
     .from('sessions')
     .select('id, feedback')
@@ -95,14 +98,18 @@ export async function POST(
     .eq('user_id', user.id)
     .single()
 
-  if (!session) return new Response('Session not found', { status: 404 })
+  if (!session) {
+    console.error('[Hume] Session not found:', sessionId)
+    return new Response('Session not found', { status: 404 })
+  }
 
   const admin = createAdminClient()
 
-  // Get a signed URL for the audio (valid 15 minutes)
   const { data: signedUrl, error: signedUrlError } = await admin.storage
     .from('session-audio')
     .createSignedUrl(`${sessionId}.webm`, 900)
+
+  console.log('[Hume] Signed URL result:', { signedUrl: !!signedUrl?.signedUrl, error: signedUrlError?.message })
 
   if (signedUrlError || !signedUrl?.signedUrl) {
     return new Response('No audio found', { status: 404 })
@@ -111,19 +118,20 @@ export async function POST(
   let scores: VocalScores | null = null
 
   try {
-    // Submit Hume batch job
+    console.log('[Hume] Submitting batch job...')
     const job = await humePost('/jobs', {
       models: { prosody: {} },
       urls: [signedUrl.signedUrl],
     }) as { job_id: string }
 
     const jobId = job.job_id
+    console.log('[Hume] Job submitted:', jobId)
 
-    // Poll for completion (max 120s, every 5s)
     let done = false
     for (let attempt = 0; attempt < 24 && !done; attempt++) {
       await new Promise(r => setTimeout(r, 5000))
       const status = await humeGet(`/jobs/${jobId}`) as { state: { status: string } }
+      console.log('[Hume] Poll attempt', attempt + 1, '— status:', status.state?.status)
       if (status.state?.status === 'COMPLETED') {
         done = true
       } else if (status.state?.status === 'FAILED') {
@@ -135,8 +143,9 @@ export async function POST(
 
     const predictions = await humeGet(`/jobs/${jobId}/predictions`) as HumeFileResult[]
     scores = extractScores(predictions)
+    console.log('[Hume] Extracted scores:', scores)
   } catch (err) {
-    console.error('Hume analysis error:', err)
+    console.error('[Hume] Analysis error:', err)
     return new Response(JSON.stringify({ error: 'Vocal analysis failed' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },

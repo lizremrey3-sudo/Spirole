@@ -18,16 +18,38 @@ export default function HumeAutoTrigger({ sessionId }: { sessionId: string }) {
 
   useEffect(() => {
     let cancelled = false
+    console.log('[HumeAutoTrigger] Triggering vocal analysis for session', sessionId)
     fetch(`/api/session/${sessionId}/hume`, { method: 'POST' })
       .then(async res => {
         if (cancelled) return
-        if (res.status === 404) { setState('no-audio'); return }
-        if (!res.ok) { setState('error'); return }
+        console.log('[HumeAutoTrigger] Response status:', res.status)
+        if (res.status === 404) {
+          console.log('[HumeAutoTrigger] No audio found for session')
+          setState('no-audio')
+          return
+        }
+        if (!res.ok) {
+          const text = await res.text()
+          console.error('[HumeAutoTrigger] Error response:', res.status, text)
+          setState('error')
+          return
+        }
         const data = await res.json() as { scores?: VocalScores; error?: string }
-        if (data.scores) { setScores(data.scores); setState('done') }
-        else setState('error')
+        console.log('[HumeAutoTrigger] Result:', data)
+        if (data.scores) {
+          setScores(data.scores)
+          setState('done')
+        } else {
+          console.error('[HumeAutoTrigger] No scores in response:', data.error)
+          setState('error')
+        }
       })
-      .catch(() => { if (!cancelled) setState('error') })
+      .catch(err => {
+        if (!cancelled) {
+          console.error('[HumeAutoTrigger] Fetch error:', err)
+          setState('error')
+        }
+      })
     return () => { cancelled = true }
   }, [sessionId])
 
@@ -35,20 +57,16 @@ export default function HumeAutoTrigger({ sessionId }: { sessionId: string }) {
 
   if (state === 'loading') {
     return (
-      <div className="mb-8">
-        <h2 className="mb-3 text-sm font-semibold text-zinc-900">Vocal Delivery</h2>
-        <div className="rounded-xl border border-zinc-200 bg-white px-6 py-8 text-center">
-          <p className="text-sm text-zinc-400 animate-pulse">Analyzing vocal delivery…</p>
-        </div>
+      <div className="rounded-xl border border-white/10 bg-[#111827] px-6 py-8 text-center">
+        <p className="animate-pulse text-sm text-white/40">Analyzing vocal delivery…</p>
       </div>
     )
   }
 
   if (state === 'error') {
     return (
-      <div className="mb-8">
-        <h2 className="mb-3 text-sm font-semibold text-zinc-900">Vocal Delivery</h2>
-        <p className="text-sm text-zinc-400">Vocal analysis unavailable for this session.</p>
+      <div className="rounded-xl border border-white/10 bg-[#111827] px-6 py-4 text-center">
+        <p className="text-sm text-white/40">Vocal analysis unavailable for this session.</p>
       </div>
     )
   }

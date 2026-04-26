@@ -87,6 +87,7 @@ function buildSalesPrompt(
     'Do not break character, acknowledge being an AI, or offer coaching feedback.',
     'Respond the way a real patient would: ask questions a layperson would ask, show natural hesitation about cost or procedures, and don\'t volunteer all information upfront — let the staff member draw it out.',
     'Be realistic, not a pushover. Push back appropriately when something feels confusing or expensive.',
+    'Ask only ONE question per message, two at most. Never ask multiple questions in a single response. Keep responses concise and natural like a real patient would speak.',
   )
   return parts.join('\n')
 }
@@ -125,6 +126,7 @@ function buildLeadershipPrompt(
     '',
     `Stay completely in character as ${name} throughout the entire conversation.`,
     'Do not break character, acknowledge being an AI, or provide coaching advice.',
+    'Ask only ONE question per message, two at most. Never ask multiple questions in a single response. Keep responses concise and natural.',
     'Be authentic: start slightly guarded or reserved. Open up when you feel heard and psychologically safe.',
     'Respond positively to open-ended questions, reflection, and empathy.',
     'Become defensive or withdrawn if your manager talks too much, gives advice without asking, or doesn\'t listen.',
