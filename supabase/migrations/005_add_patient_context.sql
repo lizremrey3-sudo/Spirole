@@ -1,1 +1,1 @@
-ALTER TABLE scenarios ADD COLUMN patient_context jsonb;
+ALTER TABLE scenarios ADD COLUMN IF NOT EXISTS patient_context jsonb;

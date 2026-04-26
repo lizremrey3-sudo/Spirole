@@ -38,8 +38,11 @@ export async function POST(
     })
 
   if (error) {
-    console.error('Audio upload error:', error)
-    return new Response('Upload failed', { status: 500 })
+    console.error('[audio] Upload failed:', error.message, error)
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    })
   }
 
   return new Response(JSON.stringify({ ok: true }), {
