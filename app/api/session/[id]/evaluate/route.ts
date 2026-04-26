@@ -131,7 +131,7 @@ export async function POST(
 
   const { data: session } = await supabase
     .from('sessions')
-    .select('id, tenant_id, status, session_type, scenarios(title, description, persona, rubric)')
+    .select('id, tenant_id, status, scenarios(title, description, persona, rubric, associate_type)')
     .eq('id', sessionId)
     .eq('user_id', user.id)
     .single()
@@ -158,8 +158,9 @@ export async function POST(
     )
   }
 
-  const sessionType  = (session.session_type as string | undefined) ?? 'sales_roleplay'
   const scenarioRaw  = Array.isArray(session.scenarios) ? session.scenarios[0] : session.scenarios
+  const associateType = (scenarioRaw?.associate_type as string | undefined) ?? 'optician'
+  const sessionType  = associateType === 'manager' ? 'leadership_coaching' : 'sales_roleplay'
   const scenarioTitle = (scenarioRaw?.title as string | undefined) ?? 'Untitled Scenario'
   const scenarioDesc  = (scenarioRaw?.description as string | null | undefined) ?? null
   const persona       = (scenarioRaw?.persona ?? {}) as PersonaJson
