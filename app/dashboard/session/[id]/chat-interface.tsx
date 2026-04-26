@@ -27,17 +27,19 @@ interface SR {
   stop(): void
   onresult: ((e: SREvent) => void) | null
   onend: (() => void) | null
-  onerror: (() => void) | null
+  onerror: ((e: SRErrorEvent) => void) | null
 }
 
 interface SRResult { isFinal: boolean; 0: { transcript: string } }
 interface SREvent { resultIndex: number; results: SRResult[] & { length: number } }
+interface SRErrorEvent { error: string; message?: string }
 
 function getSpeechRecognitionCtor(): (new () => SR) | null {
   if (typeof window === 'undefined') return null
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const w = window as any
-  return (w.SpeechRecognition ?? w.webkitSpeechRecognition) as ((new () => SR) | undefined) ?? null
+  // Prefer webkitSpeechRecognition — required for Chrome
+  return (w.webkitSpeechRecognition ?? w.SpeechRecognition) as ((new () => SR) | undefined) ?? null
 }
 
 export default function ChatInterface({
@@ -95,36 +97,35 @@ export default function ChatInterface({
 
     const recognition = new Ctor()
     recognition.continuous = false
-    recognition.interimResults = true
+    recognition.interimResults = false
     recognition.lang = 'en-US'
 
     recognition.onresult = (e: SREvent) => {
-      let interim = ''
+      console.log('[SpeechRecognition] onresult', e)
       let final = ''
       for (let i = e.resultIndex; i < e.results.length; i++) {
-        const t = e.results[i][0].transcript
-        if (e.results[i].isFinal) final += t
-        else interim += t
+        if (e.results[i].isFinal) final += e.results[i][0].transcript
       }
+      console.log('[SpeechRecognition] final transcript:', final)
       if (final) {
         setInput(prev => {
           const base = prev.trimEnd()
           return base ? `${base} ${final.trim()}` : final.trim()
         })
         setInterimText('')
-      } else {
-        setInterimText(interim)
       }
     }
 
     recognition.onend = () => {
+      console.log('[SpeechRecognition] onend')
       setIsListening(false)
       setInterimText('')
       stopMediaRecorder()
       textareaRef.current?.focus()
     }
 
-    recognition.onerror = () => {
+    recognition.onerror = (e: SRErrorEvent) => {
+      console.log('[SpeechRecognition] onerror', e.error, e.message)
       setIsListening(false)
       setInterimText('')
       stopMediaRecorder()
