@@ -51,7 +51,7 @@ export async function generateAssessment(
     .eq('status', 'completed')
     .gte('completed_at', fourteenDaysAgo)
     .not('score', 'is', null)
-    .order('completed_at', { ascending: false })
+    .order('completed_at', { ascending: true })
 
   if (!sessions || sessions.length < 3) {
     return { error: 'Not enough data — need at least 3 completed sessions in the past 14 days.' }
