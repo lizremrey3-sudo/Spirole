@@ -45,17 +45,17 @@ function buildSalesPrompt(
   const humanRole    = ASSOCIATE_ROLE_LABELS[associateType] ?? 'a staff member at the practice'
 
   const parts: string[] = [
-    name
-      ? `You are ${name}, a patient visiting an optometric practice.`
-      : `You are a patient visiting an optometric practice.`,
-    `You are currently speaking with ${humanRole}.`,
-    `Setting: an optometric/optical retail clinic.`,
+    `ROLE ASSIGNMENT — read carefully:`,
+    `YOU are ${name ? `${name}, ` : ''}the PATIENT/CUSTOMER visiting an optometric practice.`,
+    `The HUMAN typing to you is the ${humanRole} — they are the one being trained.`,
+    `You play the patient. The human plays the staff. Never swap these roles.`,
     '',
+    `Setting: an optometric/optical retail clinic.`,
     `Scenario: ${scenarioTitle}`,
   ]
   if (scenarioDescription) parts.push(scenarioDescription)
 
-  parts.push('\nYour character:')
+  parts.push('\nYour character as the patient:')
   parts.push(`- Demeanor: ${tone ?? 'Friendly but a little uncertain about optical jargon'}`)
   parts.push(`- Background: ${background ?? 'Wears glasses or contacts, visits an eye doctor roughly once a year'}`)
   if (chiefComplaint) parts.push(`- Reason for visit: ${chiefComplaint}`)
@@ -65,7 +65,7 @@ function buildSalesPrompt(
   if (extraContext)   parts.push(`- Additional context: ${extraContext}`)
 
   if (patientContext) {
-    parts.push('\nYour patient record (information about you — respond consistently with these details when asked):')
+    parts.push('\nYour patient record (respond consistently with these details when asked):')
     const cr = patientContext.current_rx
     if (cr?.OD || cr?.OS || cr?.add) {
       parts.push(`- Current Rx: OD ${cr.OD || 'N/A'} | OS ${cr.OS || 'N/A'} | Add ${cr.add || 'N/A'}`)
@@ -83,7 +83,7 @@ function buildSalesPrompt(
 
   parts.push(
     '',
-    'Stay completely in character throughout the conversation.',
+    'Stay completely in character as the patient throughout the entire conversation.',
     'Do not break character, acknowledge being an AI, or offer coaching feedback.',
     'Respond the way a real patient would: ask questions a layperson would ask, show natural hesitation about cost or procedures, and don\'t volunteer all information upfront — let the staff member draw it out.',
     'Be realistic, not a pushover. Push back appropriately when something feels confusing or expensive.',
@@ -105,14 +105,17 @@ function buildLeadershipPrompt(
   const coachRole  = associateType === 'manager' ? 'manager' : (ASSOCIATE_ROLE_LABELS[associateType] ?? 'manager')
 
   const parts: string[] = [
-    `You are ${name}, a team member having a 1:1 coaching conversation with your ${coachRole}.`,
-    `Setting: a workplace coaching or performance conversation.`,
+    `ROLE ASSIGNMENT — read carefully:`,
+    `YOU are ${name}, a team member in a 1:1 coaching conversation.`,
+    `The HUMAN typing to you is your ${coachRole} — they are the one being trained on coaching skills.`,
+    `You play the team member/direct report. The human plays the manager/coach. Never swap these roles.`,
     '',
+    `Setting: a workplace coaching or performance conversation.`,
     `Scenario: ${scenarioTitle}`,
   ]
   if (scenarioDescription) parts.push(scenarioDescription)
 
-  parts.push('\nYour character:')
+  parts.push('\nYour character as the team member:')
   parts.push(`- Demeanor: ${tone ?? 'Somewhat guarded at first, but open to honest conversation when you feel genuinely heard'}`)
   if (background) parts.push(`- Background: ${background}`)
   if (challenge)  parts.push(`- Current challenge or situation: ${challenge}`)
@@ -120,7 +123,7 @@ function buildLeadershipPrompt(
 
   parts.push(
     '',
-    `Stay completely in character as ${name} throughout the conversation.`,
+    `Stay completely in character as ${name} throughout the entire conversation.`,
     'Do not break character, acknowledge being an AI, or provide coaching advice.',
     'Be authentic: start slightly guarded or reserved. Open up when you feel heard and psychologically safe.',
     'Respond positively to open-ended questions, reflection, and empathy.',

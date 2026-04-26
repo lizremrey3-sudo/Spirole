@@ -91,16 +91,16 @@ export async function createSession(scenarioId: string): Promise<CreateSessionRe
 
   if (!profile) return { error: 'User profile not found.' }
 
-  // Resume an existing in-progress session rather than creating a duplicate
+  // Resume only if an in_progress session exists — never resume completed or abandoned
   const { data: existing } = await supabase
     .from('sessions')
-    .select('id')
+    .select('id, status')
     .eq('user_id', user.id)
     .eq('scenario_id', scenarioId)
     .eq('status', 'in_progress')
     .maybeSingle()
 
-  if (existing) return { sessionId: existing.id, resumed: true }
+  if (existing?.status === 'in_progress') return { sessionId: existing.id, resumed: true }
 
   // Fetch scenario first so we can stamp session_type on the session record
   const { data: scenario } = await supabase
