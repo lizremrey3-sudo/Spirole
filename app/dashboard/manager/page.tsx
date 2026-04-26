@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import DashboardNav from '@/app/dashboard/dashboard-nav'
 import AssessmentPanel from '@/app/dashboard/assessment-panel'
 import TrendChart from './trend-chart'
-import LeadershipScenarios from './leadership-scenarios'
+import ScenariosPanel from '@/app/dashboard/scenarios-panel'
 import type { AssessmentContent } from '@/app/actions/assessments'
 
 const ASSOCIATE_TYPES = [
@@ -84,9 +84,8 @@ export default async function ManagerDashboard() {
       .not('score', 'is', null),
     supabase
       .from('scenarios')
-      .select('id, title, description')
+      .select('id, title, description, associate_type')
       .eq('tenant_id', tenantId)
-      .eq('session_type', 'leadership_coaching')
       .eq('is_active', true)
       .order('title'),
     supabase
@@ -101,9 +100,8 @@ export default async function ManagerDashboard() {
 
   const practiceName = (tenantResult.data?.name as string | null) ?? 'My Practice'
   const sessions = (sessionsResult.data ?? []) as SessionRow[]
-  const lcScenarios = (lcScenariosResult.data ?? []) as {
-    id: string; title: string; description: string | null
-  }[]
+  type ScenarioRow = { id: string; title: string; description: string | null; associate_type: 'manager' | 'optician' | 'technician' | 'receptionist' }
+  const allScenarios = (lcScenariosResult.data ?? []) as ScenarioRow[]
   const cachedAssessment = assessmentResult.data as {
     content: AssessmentContent; generated_at: string
   } | null
@@ -169,21 +167,16 @@ export default async function ManagerDashboard() {
             })}
           </div>
 
-          {/* Trend + Leadership */}
-          <div className="grid gap-6 lg:grid-cols-[3fr_2fr]">
-            <div className="rounded-xl border border-white/10 bg-[#111827] p-6">
-              <h2 className="mb-1 text-sm font-semibold text-[#2dd4bf]">Score Trend</h2>
-              <p className="mb-4 text-xs text-white/40">Weekly average — {practiceName}, last 30 days</p>
-              <TrendChart data={weeklyData} />
-            </div>
+          {/* Trend chart */}
+          <div className="rounded-xl border border-white/10 bg-[#111827] p-6">
+            <h2 className="mb-1 text-sm font-semibold text-[#2dd4bf]">Score Trend</h2>
+            <p className="mb-4 text-xs text-white/40">Weekly average — {practiceName}, last 30 days</p>
+            <TrendChart data={weeklyData} />
+          </div>
 
-            <div className="rounded-xl border border-white/10 bg-[#111827] p-6">
-              <div className="mb-4">
-                <h2 className="text-sm font-semibold text-[#2dd4bf]">Leadership Coaching</h2>
-                <p className="mt-0.5 text-xs text-white/40">Practice coaching conversations</p>
-              </div>
-              <LeadershipScenarios scenarios={lcScenarios} />
-            </div>
+          {/* Scenarios */}
+          <div className="rounded-xl border border-white/10 bg-[#111827] p-6">
+            <ScenariosPanel scenarios={allScenarios} />
           </div>
 
           <AssessmentPanel
