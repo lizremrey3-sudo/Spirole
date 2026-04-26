@@ -91,7 +91,17 @@ export async function createSession(scenarioId: string): Promise<CreateSessionRe
 
   if (!profile) return { error: 'User profile not found.' }
 
-  // Resume only if an in_progress session exists — never resume completed or abandoned
+  // Abandon any in_progress sessions for this scenario older than 24 hours
+  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+  await supabase
+    .from('sessions')
+    .update({ status: 'abandoned' })
+    .eq('user_id', user.id)
+    .eq('scenario_id', scenarioId)
+    .eq('status', 'in_progress')
+    .lt('started_at', twentyFourHoursAgo)
+
+  // Resume only if a recent in_progress session exists — never resume completed or abandoned
   const { data: existing } = await supabase
     .from('sessions')
     .select('id, status')
