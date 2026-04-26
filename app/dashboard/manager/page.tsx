@@ -2,7 +2,6 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import DashboardNav from '@/app/dashboard/dashboard-nav'
-import PracticeSelector from '@/app/dashboard/practice-selector'
 import AssessmentPanel from '@/app/dashboard/assessment-panel'
 import TrendChart from './trend-chart'
 import LeadershipScenarios from './leadership-scenarios'
@@ -52,78 +51,37 @@ function computeWeeklyData(sessions: { score: number; completed_at: string }[]) 
   }))
 }
 
-export default async function ManagerDashboard({
-  searchParams,
-}: {
-  searchParams: Promise<{ practice?: string }>
-}) {
-  const { practice: practiceParam } = await searchParams
+function scoreColor(avg: number) {
+  if (avg >= 70) return 'text-green-400'
+  if (avg >= 40) return 'text-yellow-400'
+  return 'text-red-400'
+}
+
+export default async function ManagerDashboard() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/sign-in')
 
   const { data: profile } = await supabase
     .from('users')
-    .select('role, practice_id, tenant_id')
+    .select('role, tenant_id')
     .eq('id', user.id)
     .single()
 
   if (!profile || !['manager', 'admin'].includes(profile.role as string)) redirect('/dashboard')
 
   const tenantId = profile.tenant_id as string
-  const role = profile.role as string
-
-  let practices: { id: string; name: string }[] = []
-  if (role === 'admin') {
-    const { data } = await supabase
-      .from('practices')
-      .select('id, name')
-      .eq('tenant_id', tenantId)
-      .order('name')
-    practices = data ?? []
-  } else {
-    const managerPractices: Set<string> = new Set()
-    if (profile.practice_id) managerPractices.add(profile.practice_id as string)
-    const { data: managed } = await supabase
-      .from('practices')
-      .select('id, name')
-      .eq('manager_id', user.id)
-    for (const p of managed ?? []) managerPractices.add(p.id as string)
-
-    if (managerPractices.size > 0) {
-      const { data } = await supabase
-        .from('practices')
-        .select('id, name')
-        .in('id', [...managerPractices])
-        .order('name')
-      practices = data ?? []
-    }
-  }
-
-  const selectedPracticeId = practiceParam ?? practices[0]?.id ?? null
-
-  let practiceUserIds: string[] = []
-  if (selectedPracticeId) {
-    const { data: practiceUsers } = await supabase
-      .from('users')
-      .select('id')
-      .eq('practice_id', selectedPracticeId)
-      .eq('tenant_id', tenantId)
-    practiceUserIds = (practiceUsers ?? []).map(u => u.id as string)
-  }
-
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
 
-  const [sessionsResult, lcScenariosResult, assessmentResult] = await Promise.all([
-    practiceUserIds.length > 0
-      ? supabase
-          .from('sessions')
-          .select('score, completed_at, scenarios(associate_type)')
-          .in('user_id', practiceUserIds)
-          .eq('status', 'completed')
-          .gte('completed_at', thirtyDaysAgo)
-          .not('score', 'is', null)
-      : { data: [] },
+  const [tenantResult, sessionsResult, lcScenariosResult, assessmentResult] = await Promise.all([
+    supabase.from('tenants').select('name').eq('id', tenantId).single(),
+    supabase
+      .from('sessions')
+      .select('score, completed_at, scenarios(associate_type)')
+      .eq('tenant_id', tenantId)
+      .eq('status', 'completed')
+      .gte('completed_at', thirtyDaysAgo)
+      .not('score', 'is', null),
     supabase
       .from('scenarios')
       .select('id, title, description')
@@ -131,18 +89,17 @@ export default async function ManagerDashboard({
       .eq('session_type', 'leadership_coaching')
       .eq('is_active', true)
       .order('title'),
-    selectedPracticeId
-      ? supabase
-          .from('assessments')
-          .select('content, generated_at')
-          .eq('tenant_id', tenantId)
-          .eq('practice_id', selectedPracticeId)
-          .order('generated_at', { ascending: false })
-          .limit(1)
-          .maybeSingle()
-      : { data: null },
+    supabase
+      .from('assessments')
+      .select('content, generated_at')
+      .eq('tenant_id', tenantId)
+      .is('practice_id', null)
+      .order('generated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ])
 
+  const practiceName = (tenantResult.data?.name as string | null) ?? 'My Practice'
   const sessions = (sessionsResult.data ?? []) as SessionRow[]
   const lcScenarios = (lcScenariosResult.data ?? []) as {
     id: string; title: string; description: string | null
@@ -151,6 +108,7 @@ export default async function ManagerDashboard({
     content: AssessmentContent; generated_at: string
   } | null
 
+  // Score cards by associate type
   const scoresByType: Record<string, number[]> = {}
   for (const s of sessions) {
     const type = getAssociateType(s)
@@ -160,18 +118,11 @@ export default async function ManagerDashboard({
     }
   }
 
+  // Weekly trend
   const scoredSessions = sessions
     .filter(s => s.score !== null && s.completed_at)
     .map(s => ({ score: Number(s.score), completed_at: s.completed_at }))
   const weeklyData = computeWeeklyData(scoredSessions)
-
-  const selectedPracticeName = practices.find(p => p.id === selectedPracticeId)?.name ?? 'Team'
-
-  function scoreColor(avg: number) {
-    if (avg >= 70) return 'text-green-400'
-    if (avg >= 40) return 'text-yellow-400'
-    return 'text-red-400'
-  }
 
   return (
     <div className="flex min-h-full flex-col bg-[#0a0e1a]">
@@ -180,9 +131,9 @@ export default async function ManagerDashboard({
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
 
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+          <div>
             <h1 className="text-2xl font-semibold text-white">Manager Dashboard</h1>
-            <PracticeSelector practices={practices} selectedId={selectedPracticeId} />
+            <p className="mt-1 text-sm text-white/50">{practiceName} · last 30 days</p>
           </div>
           <Link
             href="/dashboard/scenarios/new"
@@ -192,66 +143,56 @@ export default async function ManagerDashboard({
           </Link>
         </div>
 
-        {!selectedPracticeId ? (
-          <div className="rounded-xl border border-white/10 bg-[#111827] px-6 py-12 text-center">
-            <p className="text-sm text-white/50">
-              No practice assigned yet. Ask your admin to set up your practice in Supabase.
-            </p>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6">
 
-            {/* Score cards */}
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-              {ASSOCIATE_TYPES.map(({ key, label }) => {
-                const scores = scoresByType[key] ?? []
-                const avg = scores.length
-                  ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
-                  : null
-                return (
-                  <div key={key} className="rounded-xl border border-white/10 bg-[#111827] p-5">
-                    <p className="text-xs font-medium text-white/50">{label} Scenarios</p>
-                    <p className={`mt-1 text-3xl font-bold ${avg !== null ? scoreColor(avg) : 'text-white/30'}`}>
-                      {avg ?? '—'}
-                      {avg !== null && (
-                        <span className="ml-1 text-sm font-normal text-white/40">/100</span>
-                      )}
-                    </p>
-                    <p className="mt-0.5 text-xs text-white/40">
-                      {scores.length} session{scores.length !== 1 ? 's' : ''}
-                    </p>
-                  </div>
-                )
-              })}
-            </div>
-
-            {/* Trend + Leadership */}
-            <div className="grid gap-6 lg:grid-cols-[3fr_2fr]">
-              <div className="rounded-xl border border-white/10 bg-[#111827] p-6">
-                <h2 className="mb-1 text-sm font-semibold text-[#2dd4bf]">Score Trend</h2>
-                <p className="mb-4 text-xs text-white/40">Weekly average — {selectedPracticeName}, last 30 days</p>
-                <TrendChart data={weeklyData} />
-              </div>
-
-              <div className="rounded-xl border border-white/10 bg-[#111827] p-6">
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <div>
-                    <h2 className="text-sm font-semibold text-[#2dd4bf]">Leadership Coaching</h2>
-                    <p className="mt-0.5 text-xs text-white/40">Practice coaching conversations</p>
-                  </div>
+          {/* Score cards */}
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {ASSOCIATE_TYPES.map(({ key, label }) => {
+              const scores = scoresByType[key] ?? []
+              const avg = scores.length
+                ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+                : null
+              return (
+                <div key={key} className="rounded-xl border border-white/10 bg-[#111827] p-5">
+                  <p className="text-xs font-medium text-white/50">{label} Scenarios</p>
+                  <p className={`mt-1 text-3xl font-bold ${avg !== null ? scoreColor(avg) : 'text-white/30'}`}>
+                    {avg ?? '—'}
+                    {avg !== null && (
+                      <span className="ml-1 text-sm font-normal text-white/40">/100</span>
+                    )}
+                  </p>
+                  <p className="mt-0.5 text-xs text-white/40">
+                    {scores.length} session{scores.length !== 1 ? 's' : ''}
+                  </p>
                 </div>
-                <LeadershipScenarios scenarios={lcScenarios} />
-              </div>
+              )
+            })}
+          </div>
+
+          {/* Trend + Leadership */}
+          <div className="grid gap-6 lg:grid-cols-[3fr_2fr]">
+            <div className="rounded-xl border border-white/10 bg-[#111827] p-6">
+              <h2 className="mb-1 text-sm font-semibold text-[#2dd4bf]">Score Trend</h2>
+              <p className="mb-4 text-xs text-white/40">Weekly average — {practiceName}, last 30 days</p>
+              <TrendChart data={weeklyData} />
             </div>
 
-            <AssessmentPanel
-              practiceId={selectedPracticeId}
-              tenantId={tenantId}
-              initial={cachedAssessment}
-              label="Team"
-            />
+            <div className="rounded-xl border border-white/10 bg-[#111827] p-6">
+              <div className="mb-4">
+                <h2 className="text-sm font-semibold text-[#2dd4bf]">Leadership Coaching</h2>
+                <p className="mt-0.5 text-xs text-white/40">Practice coaching conversations</p>
+              </div>
+              <LeadershipScenarios scenarios={lcScenarios} />
+            </div>
           </div>
-        )}
+
+          <AssessmentPanel
+            practiceId={null}
+            tenantId={tenantId}
+            initial={cachedAssessment}
+            label="Team"
+          />
+        </div>
       </main>
     </div>
   )

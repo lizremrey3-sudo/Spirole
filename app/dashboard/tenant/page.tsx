@@ -1,5 +1,4 @@
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import DashboardNav from '@/app/dashboard/dashboard-nav'
 import AssessmentPanel from '@/app/dashboard/assessment-panel'
@@ -22,6 +21,13 @@ function scoreColor(avg: number) {
   return 'text-red-400'
 }
 
+const ASSOCIATE_TYPES = [
+  { key: 'optician',     label: 'Optician' },
+  { key: 'technician',   label: 'Technician' },
+  { key: 'receptionist', label: 'Receptionist' },
+  { key: 'manager',      label: 'Manager' },
+] as const
+
 export default async function TenantDashboard() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -38,12 +44,11 @@ export default async function TenantDashboard() {
   const tenantId = profile.tenant_id as string
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
 
-  const [practicesResult, usersResult, sessionsResult, assessmentResult] = await Promise.all([
-    supabase.from('practices').select('id, name, manager_id').eq('tenant_id', tenantId).order('name'),
-    supabase.from('users').select('id, practice_id').eq('tenant_id', tenantId),
+  const [tenantResult, sessionsResult, assessmentResult] = await Promise.all([
+    supabase.from('tenants').select('name').eq('id', tenantId).single(),
     supabase
       .from('sessions')
-      .select('user_id, score, completed_at')
+      .select('score, completed_at, scenarios(associate_type)')
       .eq('tenant_id', tenantId)
       .eq('status', 'completed')
       .gte('completed_at', thirtyDaysAgo)
@@ -58,42 +63,43 @@ export default async function TenantDashboard() {
       .maybeSingle(),
   ])
 
-  const practices  = (practicesResult.data ?? []) as { id: string; name: string; manager_id: string | null }[]
-  const allUsers   = (usersResult.data ?? []) as { id: string; practice_id: string | null }[]
-  const allSessions = (sessionsResult.data ?? []) as { user_id: string; score: string | number; completed_at: string }[]
+  const practiceName = (tenantResult.data?.name as string | null) ?? 'My Practice'
+  const allSessions = (sessionsResult.data ?? []) as {
+    score: string | number
+    completed_at: string
+    scenarios: { associate_type: string } | { associate_type: string }[] | null
+  }[]
   const cachedAssessment = assessmentResult.data as { content: AssessmentContent; generated_at: string } | null
-
-  const userPractice: Record<string, string> = {}
-  for (const u of allUsers) {
-    if (u.practice_id) userPractice[u.id] = u.practice_id
-  }
 
   const bins = computeWeekBins()
 
-  const practiceStats = practices.map(p => {
-    const pSessions = allSessions.filter(s => userPractice[s.user_id] === p.id)
-    const scores = pSessions.map(s => Number(s.score)).filter(isFinite)
+  // Overall stats
+  const allScores = allSessions.map(s => Number(s.score)).filter(isFinite)
+  const overallAvg = allScores.length
+    ? Math.round(allScores.reduce((a, b) => a + b, 0) / allScores.length)
+    : null
 
-    const weeklyAvgs = bins.map(b => {
-      const binScores = pSessions
-        .filter(s => {
-          const d = new Date(s.completed_at)
-          return d >= b.start && d < b.end
-        })
-        .map(s => Number(s.score))
-        .filter(isFinite)
-      return binScores.length
-        ? Math.round(binScores.reduce((a, v) => a + v, 0) / binScores.length)
-        : null
-    })
+  // Score cards by associate type
+  const scoresByType: Record<string, number[]> = {}
+  for (const s of allSessions) {
+    const sc = Array.isArray(s.scenarios) ? s.scenarios[0] : s.scenarios
+    const type = (sc as { associate_type?: string } | null)?.associate_type ?? 'unknown'
+    const score = Number(s.score)
+    if (isFinite(score)) (scoresByType[type] ??= []).push(score)
+  }
 
-    return {
-      id: p.id,
-      name: p.name,
-      avg: scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null,
-      sessionCount: pSessions.length,
-      weeklyAvgs,
-    }
+  // Weekly trend
+  const weeklyAvgs = bins.map(b => {
+    const binScores = allSessions
+      .filter(s => {
+        const d = new Date(s.completed_at)
+        return d >= b.start && d < b.end
+      })
+      .map(s => Number(s.score))
+      .filter(isFinite)
+    return binScores.length
+      ? Math.round(binScores.reduce((a, v) => a + v, 0) / binScores.length)
+      : null
   })
 
   const weekLabels = bins.map(b => b.label)
@@ -105,62 +111,62 @@ export default async function TenantDashboard() {
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
 
         <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-white">Tenant Dashboard</h1>
-          <p className="mt-1 text-sm text-white/50">
-            {practices.length} practice{practices.length !== 1 ? 's' : ''} · last 30 days
-          </p>
+          <h1 className="text-2xl font-semibold text-white">{practiceName}</h1>
+          <p className="mt-1 text-sm text-white/50">Last 30 days · admin view</p>
         </div>
 
-        {practices.length === 0 ? (
-          <div className="rounded-xl border border-white/10 bg-[#111827] px-6 py-12 text-center">
-            <p className="text-sm text-white/50">No practices yet. Add them in Supabase to get started.</p>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6">
 
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-              {practiceStats.map(p => (
-                <Link
-                  key={p.id}
-                  href={`/dashboard/manager?practice=${p.id}`}
-                  className="group rounded-xl border border-white/10 bg-[#111827] p-5 transition-shadow hover:border-white/20 hover:shadow-sm"
-                >
-                  <p className="mb-1 truncate text-xs font-medium text-white/50">{p.name}</p>
-                  <p className={`text-3xl font-bold ${p.avg !== null ? scoreColor(p.avg) : 'text-white/30'}`}>
-                    {p.avg ?? '—'}
-                    {p.avg !== null && <span className="ml-1 text-sm font-normal text-white/40">/100</span>}
-                  </p>
-                  <p className="mt-0.5 text-xs text-white/40">
-                    {p.sessionCount} session{p.sessionCount !== 1 ? 's' : ''}
-                  </p>
-                  <p className="mt-2 text-xs font-medium text-white/30 transition-colors group-hover:text-[#2dd4bf]">
-                    View practice →
-                  </p>
-                </Link>
-              ))}
+          {/* Summary cards */}
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <div className="rounded-xl border border-white/10 bg-[#111827] p-5">
+              <p className="text-xs font-medium text-white/50">Overall Avg</p>
+              <p className={`mt-1 text-3xl font-bold ${overallAvg !== null ? scoreColor(overallAvg) : 'text-white/30'}`}>
+                {overallAvg ?? '—'}
+                {overallAvg !== null && <span className="ml-1 text-sm font-normal text-white/40">/100</span>}
+              </p>
+              <p className="mt-0.5 text-xs text-white/40">{allScores.length} session{allScores.length !== 1 ? 's' : ''}</p>
             </div>
 
-            <div className="rounded-xl border border-white/10 bg-[#111827] p-6">
-              <h2 className="mb-1 text-sm font-semibold text-[#2dd4bf]">Practice Score Trends</h2>
-              <p className="mb-4 text-xs text-white/40">Weekly average per practice — last 30 days</p>
-              {practiceStats.some(p => p.weeklyAvgs.some(v => v !== null)) ? (
-                <PracticeTrendChart
-                  practices={practiceStats.map(p => ({ id: p.id, name: p.name, weeklyAvgs: p.weeklyAvgs }))}
-                  weekLabels={weekLabels}
-                />
-              ) : (
-                <p className="py-8 text-center text-sm text-white/40">No session data in this period.</p>
-              )}
-            </div>
-
-            <AssessmentPanel
-              practiceId={null}
-              tenantId={tenantId}
-              initial={cachedAssessment}
-              label="Tenant"
-            />
+            {ASSOCIATE_TYPES.map(({ key, label }) => {
+              const scores = scoresByType[key] ?? []
+              const avg = scores.length
+                ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+                : null
+              return (
+                <div key={key} className="rounded-xl border border-white/10 bg-[#111827] p-5">
+                  <p className="text-xs font-medium text-white/50">{label}</p>
+                  <p className={`mt-1 text-3xl font-bold ${avg !== null ? scoreColor(avg) : 'text-white/30'}`}>
+                    {avg ?? '—'}
+                    {avg !== null && <span className="ml-1 text-sm font-normal text-white/40">/100</span>}
+                  </p>
+                  <p className="mt-0.5 text-xs text-white/40">{scores.length} session{scores.length !== 1 ? 's' : ''}</p>
+                </div>
+              )
+            })}
           </div>
-        )}
+
+          {/* Trend chart */}
+          <div className="rounded-xl border border-white/10 bg-[#111827] p-6">
+            <h2 className="mb-1 text-sm font-semibold text-[#2dd4bf]">Score Trend</h2>
+            <p className="mb-4 text-xs text-white/40">Weekly average — last 30 days</p>
+            {weeklyAvgs.some(v => v !== null) ? (
+              <PracticeTrendChart
+                practices={[{ id: tenantId, name: practiceName, weeklyAvgs }]}
+                weekLabels={weekLabels}
+              />
+            ) : (
+              <p className="py-8 text-center text-sm text-white/40">No session data in this period.</p>
+            )}
+          </div>
+
+          <AssessmentPanel
+            practiceId={null}
+            tenantId={tenantId}
+            initial={cachedAssessment}
+            label="Practice"
+          />
+        </div>
       </main>
     </div>
   )
