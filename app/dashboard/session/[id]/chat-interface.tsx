@@ -129,6 +129,9 @@ export default function ChatInterface({
       setIsListening(false)
       setInterimText('')
       stopMediaRecorder()
+      if (e.error === 'not-allowed') {
+        setEndError('Microphone access blocked. Click the lock icon in your browser address bar and allow microphone access, then refresh.')
+      }
     }
 
     recognitionRef.current = recognition
