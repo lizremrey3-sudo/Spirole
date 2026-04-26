@@ -17,7 +17,6 @@ function toY(val: number) {
 export default function TrendChart({ data }: { data: WeekPoint[] }) {
   const hasAny = data.some(d => d.avg !== null)
 
-  // Split into continuous segments for gap handling
   const segments: { x: number; y: number; avg: number }[][] = []
   let current: { x: number; y: number; avg: number }[] = []
   data.forEach((d, i) => {
@@ -36,22 +35,22 @@ export default function TrendChart({ data }: { data: WeekPoint[] }) {
         const y = toY(val)
         return (
           <g key={val}>
-            <line x1={PAD.left} y1={y} x2={W - PAD.right} y2={y} stroke="#e4e4e7" strokeWidth={1} />
-            <text x={PAD.left - 6} y={y + 4} textAnchor="end" fontSize={10} fill="#a1a1aa">{val}</text>
+            <line x1={PAD.left} y1={y} x2={W - PAD.right} y2={y} stroke="rgba(255,255,255,0.08)" strokeWidth={1} />
+            <text x={PAD.left - 6} y={y + 4} textAnchor="end" fontSize={10} fill="rgba(255,255,255,0.35)">{val}</text>
           </g>
         )
       })}
 
       {/* X labels */}
       {data.map((d, i) => (
-        <text key={i} x={toX(i, data.length)} y={H - 6} textAnchor="middle" fontSize={10} fill="#a1a1aa">
+        <text key={i} x={toX(i, data.length)} y={H - 6} textAnchor="middle" fontSize={10} fill="rgba(255,255,255,0.35)">
           {d.label}
         </text>
       ))}
 
       {/* No data message */}
       {!hasAny && (
-        <text x={W / 2} y={H / 2} textAnchor="middle" fontSize={12} fill="#a1a1aa">
+        <text x={W / 2} y={H / 2} textAnchor="middle" fontSize={12} fill="rgba(255,255,255,0.3)">
           No session data in this period
         </text>
       )}
@@ -75,7 +74,7 @@ export default function TrendChart({ data }: { data: WeekPoint[] }) {
       {segments.flat().map((p, i) => (
         <g key={i}>
           <circle cx={p.x} cy={p.y} r={4} fill="#2dd4bf" />
-          <text x={p.x} y={p.y - 8} textAnchor="middle" fontSize={10} fontWeight="600" fill="#18181b">
+          <text x={p.x} y={p.y - 8} textAnchor="middle" fontSize={10} fontWeight="600" fill="rgba(255,255,255,0.8)">
             {p.avg}
           </text>
         </g>

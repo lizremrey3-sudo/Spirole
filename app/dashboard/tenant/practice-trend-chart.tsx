@@ -37,15 +37,15 @@ export default function PracticeTrendChart({
           const y = toY(val)
           return (
             <g key={val}>
-              <line x1={PAD.left} y1={y} x2={W - PAD.right} y2={y} stroke="#e4e4e7" strokeWidth={1} />
-              <text x={PAD.left - 6} y={y + 4} textAnchor="end" fontSize={10} fill="#a1a1aa">{val}</text>
+              <line x1={PAD.left} y1={y} x2={W - PAD.right} y2={y} stroke="rgba(255,255,255,0.08)" strokeWidth={1} />
+              <text x={PAD.left - 6} y={y + 4} textAnchor="end" fontSize={10} fill="rgba(255,255,255,0.35)">{val}</text>
             </g>
           )
         })}
 
         {/* X labels */}
         {weekLabels.map((label, i) => (
-          <text key={i} x={toX(i, total)} y={H - PAD.bottom + 16} textAnchor="middle" fontSize={10} fill="#a1a1aa">
+          <text key={i} x={toX(i, total)} y={H - PAD.bottom + 16} textAnchor="middle" fontSize={10} fill="rgba(255,255,255,0.35)">
             {label}
           </text>
         ))}
@@ -53,7 +53,6 @@ export default function PracticeTrendChart({
         {/* One polyline per practice */}
         {practices.map((p, pi) => {
           const color = COLORS[pi % COLORS.length]
-          // Collect segments for gap handling
           const segments: { x: number; y: number }[][] = []
           let current: { x: number; y: number }[] = []
           p.weeklyAvgs.forEach((avg, i) => {
@@ -95,10 +94,10 @@ export default function PracticeTrendChart({
         {practices.map((p, pi) => (
           <div key={p.id} className="flex items-center gap-1.5">
             <span
-              className="inline-block h-2.5 w-2.5 rounded-full shrink-0"
+              className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
               style={{ backgroundColor: COLORS[pi % COLORS.length] }}
             />
-            <span className="text-xs text-zinc-600">{p.name}</span>
+            <span className="text-xs text-white/50">{p.name}</span>
           </div>
         ))}
       </div>
