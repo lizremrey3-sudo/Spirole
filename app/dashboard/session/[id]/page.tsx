@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { signOut } from '@/app/actions/auth'
 import { abandonSession } from '@/app/actions/sessions'
 import ChatInterface from './chat-interface'
@@ -42,6 +43,7 @@ export default async function SessionPage({
 
   if (!user) redirect('/sign-in')
 
+  const admin = createAdminClient()
   const [sessionResult, messagesResult, audioCheck] = await Promise.all([
     supabase
       .from('sessions')
@@ -54,7 +56,7 @@ export default async function SessionPage({
       .eq('session_id', id)
       .in('role', ['user', 'assistant'])
       .order('created_at', { ascending: true }),
-    supabase.storage.from('session-audio').list('', { search: id }),
+    admin.storage.from('session-audio').list('', { search: id }),
   ])
 
   if (sessionResult.error || !sessionResult.data) redirect('/dashboard')
