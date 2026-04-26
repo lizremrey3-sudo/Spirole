@@ -4,23 +4,12 @@ import { createClient } from '@/lib/supabase/server'
 import { signOut } from '@/app/actions/auth'
 import { abandonSession } from '@/app/actions/sessions'
 import ChatInterface from './chat-interface'
-import PatientContextBar from './patient-context-bar'
 import VocalDeliveryPanel from './vocal-delivery-panel'
 import HumeAutoTrigger from './hume-auto-trigger'
 
 type PersonaJson = Record<string, unknown>
 type RubricDimension = { name: string; weight: number; description: string }
 type RubricJson = { dimensions?: RubricDimension[] }
-
-type PatientContext = {
-  current_rx?: { OD?: string; OS?: string; add?: string }
-  current_lens_style?: string
-  previous_rx?: { OD?: string; OS?: string; add?: string }
-  previous_lens_style?: string
-  insurance?: string
-  last_visit?: string
-  notes?: string
-}
 
 type VocalDeliveryScores = {
   confidence: number
@@ -56,7 +45,7 @@ export default async function SessionPage({
   const [sessionResult, messagesResult, audioCheck] = await Promise.all([
     supabase
       .from('sessions')
-      .select('id, status, score, feedback, started_at, completed_at, scenarios(title, description, persona, rubric, patient_context)')
+      .select('id, status, score, feedback, started_at, completed_at, scenarios(title, description, persona, rubric)')
       .eq('id', id)
       .single(),
     supabase
@@ -77,7 +66,6 @@ export default async function SessionPage({
   const scenarioTitle = (scenarioRaw?.title as string | undefined) ?? 'Training Session'
   const persona = (scenarioRaw?.persona ?? {}) as PersonaJson
   const rubric = (scenarioRaw?.rubric ?? {}) as RubricJson
-  const patientContext = (scenarioRaw?.patient_context as PatientContext | null | undefined) ?? null
   const personaName = typeof persona.name === 'string' ? persona.name : 'AI'
   const userTurns = messages.filter(m => m.role === 'user').length
 
@@ -150,10 +138,6 @@ export default async function SessionPage({
             ) : null}
           </p>
         </div>
-      )}
-
-      {patientContext && !isCompleted && (
-        <PatientContextBar ctx={patientContext} />
       )}
 
       {isCompleted ? (

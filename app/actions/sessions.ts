@@ -105,13 +105,13 @@ export async function createSession(scenarioId: string): Promise<CreateSessionRe
   // Fetch scenario first so we can stamp session_type on the session record
   const { data: scenario } = await supabase
     .from('scenarios')
-    .select('title, description, persona, associate_type, session_type')
+    .select('title, description, persona, associate_type')
     .eq('id', scenarioId)
     .single()
 
-  const sessionType   = (scenario?.session_type as string | undefined) ?? 'sales_roleplay'
   const persona       = (scenario?.persona ?? {}) as PersonaJson
   const associateType = (scenario?.associate_type as string | undefined) ?? 'optician'
+  const sessionType   = associateType === 'manager' ? 'leadership_coaching' : 'sales_roleplay'
   const title         = (scenario?.title as string | undefined) ?? 'Training Scenario'
   const description   = (scenario?.description as string | null | undefined) ?? null
 
@@ -122,7 +122,6 @@ export async function createSession(scenarioId: string): Promise<CreateSessionRe
       scenario_id: scenarioId,
       tenant_id: profile.tenant_id,
       status: 'in_progress',
-      session_type: sessionType,
     })
     .select('id')
     .single()
