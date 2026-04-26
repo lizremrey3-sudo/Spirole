@@ -22,14 +22,19 @@ type VocalScores = {
 
 type HumeEmotion = { name: string; score: number }
 type HumePrediction = { emotions: HumeEmotion[] }
-type HumeFileResult = { predictions: { models: { prosody: { grouped_predictions: { predictions: HumePrediction[] }[] } } }[] }
+type HumeSegmentPrediction = { models: { prosody: { grouped_predictions: { predictions: HumePrediction[] }[] } } }
+type HumeFileResult = {
+  results?: { predictions: HumeSegmentPrediction[] }
+  predictions?: HumeSegmentPrediction[]
+}
 
-function extractScores(predictions: HumeFileResult[]): VocalScores | null {
+function extractScores(files: HumeFileResult[]): VocalScores | null {
   const sums: Record<keyof VocalScores, number> = { confidence: 0, warmth: 0, hesitation: 0, enthusiasm: 0 }
   let count = 0
 
-  for (const file of predictions) {
-    for (const pred of file.predictions) {
+  for (const file of files) {
+    const preds = file.results?.predictions ?? file.predictions ?? []
+    for (const pred of preds) {
       const prosody = pred.models?.prosody
       if (!prosody) continue
       for (const group of prosody.grouped_predictions ?? []) {
@@ -142,6 +147,7 @@ export async function POST(
     if (!done) throw new Error('Hume job timed out')
 
     const predictions = await humeGet(`/jobs/${jobId}/predictions`) as HumeFileResult[]
+    console.log('[Hume] Raw predictions shape:', JSON.stringify(predictions?.[0]).slice(0, 300))
     scores = extractScores(predictions)
     console.log('[Hume] Extracted scores:', scores)
   } catch (err) {
