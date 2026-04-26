@@ -163,7 +163,7 @@ export async function POST(
 
   const { data: session } = await supabase
     .from('sessions')
-    .select('id, tenant_id, status, session_type, scenarios(title, description, persona, associate_type, patient_context)')
+    .select('id, tenant_id, status, scenarios(title, description, persona, associate_type)')
     .eq('id', sessionId)
     .eq('user_id', user.id)
     .single()
@@ -172,13 +172,13 @@ export async function POST(
   if (session.status !== 'in_progress') return new Response('Session is not active', { status: 400 })
 
   const tenantId      = session.tenant_id as string
-  const sessionType   = (session.session_type as string | undefined) ?? 'sales_roleplay'
   const scenario      = Array.isArray(session.scenarios) ? session.scenarios[0] : session.scenarios
   const persona        = (scenario?.persona ?? {}) as PersonaJson
   const associateType  = (scenario?.associate_type as string | undefined) ?? 'optician'
+  const sessionType    = associateType === 'manager' ? 'leadership_coaching' : 'sales_roleplay'
   const scenarioTitle  = (scenario?.title as string | undefined) ?? 'Training Scenario'
   const scenarioDesc   = (scenario?.description as string | null | undefined) ?? null
-  const patientContext = (scenario?.patient_context as PatientContext | null | undefined) ?? null
+  const patientContext = null
 
   await supabase.from('session_messages').insert({
     session_id: sessionId,
