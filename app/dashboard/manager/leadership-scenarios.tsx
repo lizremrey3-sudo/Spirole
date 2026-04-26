@@ -30,7 +30,7 @@ export default function LeadershipScenarios({ scenarios }: { scenarios: Scenario
 
   if (scenarios.length === 0) {
     return (
-      <p className="text-sm text-zinc-400">
+      <p className="text-sm text-white/40">
         No leadership coaching scenarios yet. Create one to get started.
       </p>
     )
@@ -41,24 +41,24 @@ export default function LeadershipScenarios({ scenarios }: { scenarios: Scenario
       {scenarios.map(s => (
         <div
           key={s.id}
-          className="flex items-start justify-between gap-3 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3"
+          className="flex items-start justify-between gap-3 rounded-lg border border-white/10 bg-white/5 px-4 py-3"
         >
           <div className="min-w-0">
-            <p className="text-sm font-medium text-zinc-900 truncate">{s.title}</p>
+            <p className="truncate text-sm font-medium text-white">{s.title}</p>
             {s.description && (
-              <p className="mt-0.5 text-xs text-zinc-500 line-clamp-1">{s.description}</p>
+              <p className="mt-0.5 line-clamp-1 text-xs text-white/50">{s.description}</p>
             )}
           </div>
           <button
             onClick={() => handleStart(s.id)}
             disabled={starting !== null}
-            className="shrink-0 rounded-md bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-zinc-700 disabled:opacity-50"
+            className="shrink-0 rounded-md bg-[#2dd4bf] px-3 py-1.5 text-xs font-medium text-[#0a0e1a] transition-colors hover:bg-[#2dd4bf]/80 disabled:opacity-50"
           >
             {starting === s.id ? 'Starting…' : 'Start'}
           </button>
         </div>
       ))}
-      {error && <p className="text-xs text-red-600">{error}</p>}
+      {error && <p className="text-xs text-red-400">{error}</p>}
     </div>
   )
 }

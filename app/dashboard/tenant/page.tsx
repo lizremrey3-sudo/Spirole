@@ -17,9 +17,9 @@ function computeWeekBins() {
 }
 
 function scoreColor(avg: number) {
-  if (avg >= 70) return 'text-green-700'
-  if (avg >= 40) return 'text-yellow-700'
-  return 'text-red-700'
+  if (avg >= 70) return 'text-green-400'
+  if (avg >= 40) return 'text-yellow-400'
+  return 'text-red-400'
 }
 
 export default async function TenantDashboard() {
@@ -63,7 +63,6 @@ export default async function TenantDashboard() {
   const allSessions = (sessionsResult.data ?? []) as { user_id: string; score: string | number; completed_at: string }[]
   const cachedAssessment = assessmentResult.data as { content: AssessmentContent; generated_at: string } | null
 
-  // Map user_id → practice_id
   const userPractice: Record<string, string> = {}
   for (const u of allUsers) {
     if (u.practice_id) userPractice[u.id] = u.practice_id
@@ -71,7 +70,6 @@ export default async function TenantDashboard() {
 
   const bins = computeWeekBins()
 
-  // Per-practice stats
   const practiceStats = practices.map(p => {
     const pSessions = allSessions.filter(s => userPractice[s.user_id] === p.id)
     const scores = pSessions.map(s => Number(s.score)).filter(isFinite)
@@ -101,63 +99,60 @@ export default async function TenantDashboard() {
   const weekLabels = bins.map(b => b.label)
 
   return (
-    <div className="flex min-h-full flex-col bg-zinc-50">
+    <div className="flex min-h-full flex-col bg-[#0a0e1a]">
       <DashboardNav email={user.email ?? ''} dashboardHref="/dashboard/tenant" />
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
 
         <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-zinc-900">Tenant Dashboard</h1>
-          <p className="mt-1 text-sm text-zinc-500">
+          <h1 className="text-2xl font-semibold text-white">Tenant Dashboard</h1>
+          <p className="mt-1 text-sm text-white/50">
             {practices.length} practice{practices.length !== 1 ? 's' : ''} · last 30 days
           </p>
         </div>
 
         {practices.length === 0 ? (
-          <div className="rounded-xl border border-zinc-200 bg-white px-6 py-12 text-center">
-            <p className="text-sm text-zinc-500">No practices yet. Add them in Supabase to get started.</p>
+          <div className="rounded-xl border border-white/10 bg-[#111827] px-6 py-12 text-center">
+            <p className="text-sm text-white/50">No practices yet. Add them in Supabase to get started.</p>
           </div>
         ) : (
           <div className="flex flex-col gap-6">
 
-            {/* Practice score cards */}
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
               {practiceStats.map(p => (
                 <Link
                   key={p.id}
                   href={`/dashboard/manager?practice=${p.id}`}
-                  className="group rounded-xl border border-zinc-200 bg-white p-5 transition-shadow hover:shadow-sm"
+                  className="group rounded-xl border border-white/10 bg-[#111827] p-5 transition-shadow hover:border-white/20 hover:shadow-sm"
                 >
-                  <p className="mb-1 text-xs font-medium text-zinc-500 truncate">{p.name}</p>
-                  <p className={`text-3xl font-bold ${p.avg !== null ? scoreColor(p.avg) : 'text-zinc-300'}`}>
+                  <p className="mb-1 truncate text-xs font-medium text-white/50">{p.name}</p>
+                  <p className={`text-3xl font-bold ${p.avg !== null ? scoreColor(p.avg) : 'text-white/30'}`}>
                     {p.avg ?? '—'}
-                    {p.avg !== null && <span className="ml-1 text-sm font-normal text-zinc-400">/100</span>}
+                    {p.avg !== null && <span className="ml-1 text-sm font-normal text-white/40">/100</span>}
                   </p>
-                  <p className="mt-0.5 text-xs text-zinc-400">
+                  <p className="mt-0.5 text-xs text-white/40">
                     {p.sessionCount} session{p.sessionCount !== 1 ? 's' : ''}
                   </p>
-                  <p className="mt-2 text-xs font-medium text-zinc-400 group-hover:text-zinc-600 transition-colors">
+                  <p className="mt-2 text-xs font-medium text-white/30 transition-colors group-hover:text-[#2dd4bf]">
                     View practice →
                   </p>
                 </Link>
               ))}
             </div>
 
-            {/* Multi-line trend chart */}
-            <div className="rounded-xl border border-zinc-200 bg-white p-6">
-              <h2 className="mb-1 text-sm font-semibold text-zinc-900">Practice Score Trends</h2>
-              <p className="mb-4 text-xs text-zinc-400">Weekly average per practice — last 30 days</p>
+            <div className="rounded-xl border border-white/10 bg-[#111827] p-6">
+              <h2 className="mb-1 text-sm font-semibold text-[#2dd4bf]">Practice Score Trends</h2>
+              <p className="mb-4 text-xs text-white/40">Weekly average per practice — last 30 days</p>
               {practiceStats.some(p => p.weeklyAvgs.some(v => v !== null)) ? (
                 <PracticeTrendChart
                   practices={practiceStats.map(p => ({ id: p.id, name: p.name, weeklyAvgs: p.weeklyAvgs }))}
                   weekLabels={weekLabels}
                 />
               ) : (
-                <p className="py-8 text-center text-sm text-zinc-400">No session data in this period.</p>
+                <p className="py-8 text-center text-sm text-white/40">No session data in this period.</p>
               )}
             </div>
 
-            {/* Assessment */}
             <AssessmentPanel
               practiceId={null}
               tenantId={tenantId}

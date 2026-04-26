@@ -36,7 +36,7 @@ function validateJson(str: string): string | null {
   }
 }
 
-const inputCls = 'rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500'
+const inputCls = 'rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-[#2dd4bf]/60 focus:ring-1 focus:ring-[#2dd4bf]/40'
 
 export default function ScenarioForm() {
   const [state, formAction, pending] = useActionState(createScenario, null)
@@ -52,41 +52,30 @@ export default function ScenarioForm() {
   return (
     <form action={formAction} className="flex flex-col gap-6">
       {state?.error && (
-        <p className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{state.error}</p>
+        <p className="rounded-md bg-red-500/10 px-4 py-3 text-sm text-red-400">{state.error}</p>
       )}
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="title" className="text-sm font-medium text-zinc-700">Title</label>
-        <input
-          id="title"
-          name="title"
-          type="text"
-          required
-          className={inputCls}
-        />
+        <label htmlFor="title" className="text-sm font-medium text-white/70">Title</label>
+        <input id="title" name="title" type="text" required className={inputCls} />
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="description" className="text-sm font-medium text-zinc-700">
+        <label htmlFor="description" className="text-sm font-medium text-white/70">
           Description{' '}
-          <span className="font-normal text-zinc-400">(optional)</span>
+          <span className="font-normal text-white/40">(optional)</span>
         </label>
-        <textarea
-          id="description"
-          name="description"
-          rows={3}
-          className={`${inputCls} resize-y`}
-        />
+        <textarea id="description" name="description" rows={3} className={`${inputCls} resize-y`} />
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="associate_type" className="text-sm font-medium text-zinc-700">Associate Type</label>
+        <label htmlFor="associate_type" className="text-sm font-medium text-white/70">Associate Type</label>
         <select
           id="associate_type"
           name="associate_type"
           required
           defaultValue="optician"
-          className={`${inputCls} bg-white`}
+          className={`${inputCls} bg-[#0a0e1a]`}
         >
           {ASSOCIATE_TYPES.map(({ value, label }) => (
             <option key={value} value={value}>{label}</option>
@@ -95,12 +84,12 @@ export default function ScenarioForm() {
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="session_type" className="text-sm font-medium text-zinc-700">Session Type</label>
+        <label htmlFor="session_type" className="text-sm font-medium text-white/70">Session Type</label>
         <select
           id="session_type"
           name="session_type"
           defaultValue="sales_roleplay"
-          className={`${inputCls} bg-white`}
+          className={`${inputCls} bg-[#0a0e1a]`}
         >
           <option value="sales_roleplay">Sales Roleplay</option>
           <option value="leadership_coaching">Leadership Coaching</option>
@@ -133,73 +122,73 @@ export default function ScenarioForm() {
         <button
           type="button"
           onClick={() => setShowPatientContext(v => !v)}
-          className="flex items-center gap-2 text-left text-sm font-medium text-zinc-700"
+          className="flex items-center gap-2 text-left text-sm font-medium text-white/70"
         >
           <span className={`transition-transform ${showPatientContext ? 'rotate-90' : ''}`}>▶</span>
           Patient Context
-          <span className="font-normal text-zinc-400">(optional — sales roleplay only)</span>
+          <span className="font-normal text-white/40">(optional — sales roleplay only)</span>
         </button>
 
         {showPatientContext && (
-          <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-5 flex flex-col gap-4">
+          <div className="flex flex-col gap-4 rounded-xl border border-white/10 bg-white/5 p-5">
 
             <div className="flex flex-col gap-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Current Rx</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-white/40">Current Rx</p>
               <div className="grid grid-cols-3 gap-3">
                 <div className="flex flex-col gap-1">
-                  <label htmlFor="pc_current_rx_od" className="text-xs font-medium text-zinc-600">OD (right)</label>
+                  <label htmlFor="pc_current_rx_od" className="text-xs font-medium text-white/60">OD (right)</label>
                   <input id="pc_current_rx_od" name="pc_current_rx_od" placeholder="-2.50" className={inputCls} />
                 </div>
                 <div className="flex flex-col gap-1">
-                  <label htmlFor="pc_current_rx_os" className="text-xs font-medium text-zinc-600">OS (left)</label>
+                  <label htmlFor="pc_current_rx_os" className="text-xs font-medium text-white/60">OS (left)</label>
                   <input id="pc_current_rx_os" name="pc_current_rx_os" placeholder="-3.00" className={inputCls} />
                 </div>
                 <div className="flex flex-col gap-1">
-                  <label htmlFor="pc_current_rx_add" className="text-xs font-medium text-zinc-600">Add</label>
+                  <label htmlFor="pc_current_rx_add" className="text-xs font-medium text-white/60">Add</label>
                   <input id="pc_current_rx_add" name="pc_current_rx_add" placeholder="+2.00" className={inputCls} />
                 </div>
               </div>
               <div className="flex flex-col gap-1">
-                <label htmlFor="pc_current_lens_style" className="text-xs font-medium text-zinc-600">Lens style</label>
+                <label htmlFor="pc_current_lens_style" className="text-xs font-medium text-white/60">Lens style</label>
                 <input id="pc_current_lens_style" name="pc_current_lens_style" placeholder="e.g. single vision, progressive" className={inputCls} />
               </div>
             </div>
 
             <div className="flex flex-col gap-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Previous Rx</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-white/40">Previous Rx</p>
               <div className="grid grid-cols-3 gap-3">
                 <div className="flex flex-col gap-1">
-                  <label htmlFor="pc_prev_rx_od" className="text-xs font-medium text-zinc-600">OD (right)</label>
+                  <label htmlFor="pc_prev_rx_od" className="text-xs font-medium text-white/60">OD (right)</label>
                   <input id="pc_prev_rx_od" name="pc_prev_rx_od" placeholder="-2.25" className={inputCls} />
                 </div>
                 <div className="flex flex-col gap-1">
-                  <label htmlFor="pc_prev_rx_os" className="text-xs font-medium text-zinc-600">OS (left)</label>
+                  <label htmlFor="pc_prev_rx_os" className="text-xs font-medium text-white/60">OS (left)</label>
                   <input id="pc_prev_rx_os" name="pc_prev_rx_os" placeholder="-2.75" className={inputCls} />
                 </div>
                 <div className="flex flex-col gap-1">
-                  <label htmlFor="pc_prev_rx_add" className="text-xs font-medium text-zinc-600">Add</label>
+                  <label htmlFor="pc_prev_rx_add" className="text-xs font-medium text-white/60">Add</label>
                   <input id="pc_prev_rx_add" name="pc_prev_rx_add" placeholder="" className={inputCls} />
                 </div>
               </div>
               <div className="flex flex-col gap-1">
-                <label htmlFor="pc_prev_lens_style" className="text-xs font-medium text-zinc-600">Lens style</label>
+                <label htmlFor="pc_prev_lens_style" className="text-xs font-medium text-white/60">Lens style</label>
                 <input id="pc_prev_lens_style" name="pc_prev_lens_style" placeholder="e.g. single vision" className={inputCls} />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1">
-                <label htmlFor="pc_insurance" className="text-xs font-medium text-zinc-600">Insurance</label>
+                <label htmlFor="pc_insurance" className="text-xs font-medium text-white/60">Insurance</label>
                 <input id="pc_insurance" name="pc_insurance" placeholder="e.g. VSP, EyeMed, none" className={inputCls} />
               </div>
               <div className="flex flex-col gap-1">
-                <label htmlFor="pc_last_visit" className="text-xs font-medium text-zinc-600">Last visit</label>
+                <label htmlFor="pc_last_visit" className="text-xs font-medium text-white/60">Last visit</label>
                 <input id="pc_last_visit" name="pc_last_visit" type="date" className={inputCls} />
               </div>
             </div>
 
             <div className="flex flex-col gap-1">
-              <label htmlFor="pc_notes" className="text-xs font-medium text-zinc-600">Additional notes</label>
+              <label htmlFor="pc_notes" className="text-xs font-medium text-white/60">Additional notes</label>
               <textarea id="pc_notes" name="pc_notes" rows={2} placeholder="e.g. complains about adaptation with progressives" className={`${inputCls} resize-y`} />
             </div>
           </div>
@@ -210,11 +199,11 @@ export default function ScenarioForm() {
         <button
           type="submit"
           disabled={pending || hasJsonError}
-          className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 disabled:opacity-50"
+          className="rounded-md bg-[#2dd4bf] px-4 py-2 text-sm font-medium text-[#0a0e1a] transition-colors hover:bg-[#2dd4bf]/80 disabled:opacity-50"
         >
           {pending ? 'Creating…' : 'Create Scenario'}
         </button>
-        <Link href="/dashboard" className="text-sm text-zinc-500 hover:text-zinc-700">
+        <Link href="/dashboard" className="text-sm text-white/50 hover:text-white/70">
           Cancel
         </Link>
       </div>
@@ -242,10 +231,10 @@ function JsonField({
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-center justify-between">
-        <label htmlFor={id} className="text-sm font-medium text-zinc-700">{label}</label>
-        <span className="rounded bg-zinc-100 px-1.5 py-0.5 font-mono text-xs text-zinc-500">JSON</span>
+        <label htmlFor={id} className="text-sm font-medium text-white/70">{label}</label>
+        <span className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-xs text-white/50">JSON</span>
       </div>
-      <p className="text-xs text-zinc-400">{hint}</p>
+      <p className="text-xs text-white/40">{hint}</p>
       <textarea
         id={id}
         name={id}
@@ -254,13 +243,13 @@ function JsonField({
         onChange={(e) => onChange(e.target.value)}
         spellCheck={false}
         className={[
-          'rounded-md border px-3 py-2 font-mono text-sm outline-none focus:ring-1 resize-y',
+          'rounded-md border bg-white/5 px-3 py-2 font-mono text-sm text-white outline-none focus:ring-1 resize-y',
           error
-            ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-            : 'border-zinc-300 focus:border-zinc-500 focus:ring-zinc-500',
+            ? 'border-red-500/40 focus:border-red-500/60 focus:ring-red-500/40'
+            : 'border-white/10 focus:border-[#2dd4bf]/60 focus:ring-[#2dd4bf]/40',
         ].join(' ')}
       />
-      {error && <p className="text-xs text-red-600">{error}</p>}
+      {error && <p className="text-xs text-red-400">{error}</p>}
     </div>
   )
 }

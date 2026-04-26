@@ -66,26 +66,23 @@ export default async function PricingPage() {
   }
 
   return (
-    <div className="flex min-h-full flex-col bg-zinc-50">
-      <header className="flex items-center justify-between border-b border-zinc-200 bg-white px-6 py-4">
-        <Link href="/" className="text-sm font-semibold tracking-tight text-zinc-900">
+    <div className="flex min-h-full flex-col bg-[#0a0e1a]">
+      <header className="flex items-center justify-between border-b border-white/10 bg-[#111827] px-6 py-4">
+        <Link href="/" className="text-sm font-semibold tracking-tight text-white">
           Spirole
         </Link>
         {user ? (
-          <Link href="/dashboard" className="text-sm text-zinc-500 hover:text-zinc-900">
+          <Link href="/dashboard" className="text-sm text-white/50 hover:text-white">
             Go to dashboard →
           </Link>
         ) : (
           <div className="flex gap-3">
-            <Link
-              href="/sign-in"
-              className="text-sm text-zinc-500 hover:text-zinc-900"
-            >
+            <Link href="/sign-in" className="text-sm text-white/50 hover:text-white">
               Sign in
             </Link>
             <Link
               href="/sign-up"
-              className="rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-zinc-700"
+              className="rounded-md bg-[#2dd4bf] px-3 py-1.5 text-sm font-medium text-[#0a0e1a] hover:bg-[#2dd4bf]/80"
             >
               Get started
             </Link>
@@ -95,10 +92,10 @@ export default async function PricingPage() {
 
       <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-16">
         <div className="mb-12 text-center">
-          <h1 className="text-3xl font-semibold tracking-tight text-zinc-900">
+          <h1 className="text-3xl font-semibold tracking-tight text-white">
             Choose your plan
           </h1>
-          <p className="mt-3 text-zinc-500">
+          <p className="mt-3 text-white/50">
             {user
               ? 'Select a plan to activate your account, or enter a promo code below.'
               : 'Start training your sales team with AI-powered role play.'}
@@ -111,42 +108,23 @@ export default async function PricingPage() {
               key={plan.id}
               className={`flex flex-col rounded-xl border p-6 ${
                 plan.highlighted
-                  ? 'border-zinc-900 bg-zinc-900'
-                  : 'border-zinc-200 bg-white'
+                  ? 'border-[#2dd4bf]/40 bg-[#2dd4bf]/5'
+                  : 'border-white/10 bg-[#111827]'
               }`}
             >
               <div className="mb-6">
-                <h2
-                  className={`text-lg font-semibold ${
-                    plan.highlighted ? 'text-white' : 'text-zinc-900'
-                  }`}
-                >
+                <h2 className={`text-lg font-semibold ${plan.highlighted ? 'text-[#2dd4bf]' : 'text-white'}`}>
                   {plan.name}
                 </h2>
-                <p
-                  className={`mt-1 text-sm ${
-                    plan.highlighted ? 'text-zinc-300' : 'text-zinc-500'
-                  }`}
-                >
+                <p className={`mt-1 text-sm ${plan.highlighted ? 'text-white/60' : 'text-white/50'}`}>
                   {plan.tagline}
                 </p>
               </div>
 
               <ul className="mb-8 flex flex-1 flex-col gap-2">
                 {plan.features.map((feature) => (
-                  <li
-                    key={feature}
-                    className={`flex items-start gap-2 text-sm ${
-                      plan.highlighted ? 'text-zinc-200' : 'text-zinc-600'
-                    }`}
-                  >
-                    <span
-                      className={`mt-0.5 shrink-0 ${
-                        plan.highlighted ? 'text-zinc-400' : 'text-zinc-400'
-                      }`}
-                    >
-                      ✓
-                    </span>
+                  <li key={feature} className="flex items-start gap-2 text-sm text-white/70">
+                    <span className="mt-0.5 shrink-0 text-[#2dd4bf]">✓</span>
                     {feature}
                   </li>
                 ))}
@@ -158,8 +136,8 @@ export default async function PricingPage() {
                 rel="noopener noreferrer"
                 className={`block w-full rounded-md px-4 py-2.5 text-center text-sm font-medium transition-colors ${
                   plan.highlighted
-                    ? 'bg-white text-zinc-900 hover:bg-zinc-100'
-                    : 'bg-zinc-900 text-white hover:bg-zinc-700'
+                    ? 'bg-[#2dd4bf] text-[#0a0e1a] hover:bg-[#2dd4bf]/80'
+                    : 'border border-white/15 bg-white/5 text-white/70 hover:bg-white/10'
                 }`}
               >
                 Get started
@@ -170,11 +148,11 @@ export default async function PricingPage() {
 
         {user && (
           <div className="mx-auto mt-12 max-w-md">
-            <div className="rounded-xl border border-zinc-200 bg-white p-6">
-              <h2 className="mb-1 text-sm font-semibold text-zinc-900">
+            <div className="rounded-xl border border-white/10 bg-[#111827] p-6">
+              <h2 className="mb-1 text-sm font-semibold text-[#2dd4bf]">
                 Have a promo code?
               </h2>
-              <p className="mb-4 text-sm text-zinc-500">
+              <p className="mb-4 text-sm text-white/50">
                 Pilot codes grant immediate free access. Discount codes apply at Stripe checkout.
               </p>
               <PromoCodeForm />

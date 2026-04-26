@@ -52,7 +52,7 @@ export default function ScenariosPanel({ scenarios }: { scenarios: Scenario[] })
 
   return (
     <section className="w-full">
-      <h2 className="mb-4 text-base font-semibold text-zinc-900">Training Scenarios</h2>
+      <h2 className="mb-4 text-base font-semibold text-[#2dd4bf]">Training Scenarios</h2>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {ROLES.map(({ type, label, description }) => {
@@ -65,16 +65,16 @@ export default function ScenariosPanel({ scenarios }: { scenarios: Scenario[] })
               className={[
                 'flex flex-col items-start gap-2 rounded-xl border p-4 text-left transition-all',
                 isSelected
-                  ? 'border-zinc-900 bg-zinc-900 text-white'
-                  : 'border-zinc-200 bg-white text-zinc-900 hover:border-zinc-400 hover:shadow-sm',
+                  ? 'border-[#2dd4bf] bg-[#2dd4bf]/10 text-[#2dd4bf]'
+                  : 'border-white/10 bg-[#111827] text-white hover:border-white/20 hover:bg-white/5',
               ].join(' ')}
             >
               <span className="text-sm font-semibold">{label}</span>
-              <span className={`text-xs leading-snug ${isSelected ? 'text-zinc-400' : 'text-zinc-500'}`}>
+              <span className={`text-xs leading-snug ${isSelected ? 'text-[#2dd4bf]/70' : 'text-white/50'}`}>
                 {description}
               </span>
               <span className={`mt-auto rounded-full px-2 py-0.5 text-xs font-medium ${
-                isSelected ? 'bg-zinc-700 text-zinc-200' : 'bg-zinc-100 text-zinc-600'
+                isSelected ? 'bg-[#2dd4bf]/20 text-[#2dd4bf]' : 'bg-white/10 text-white/50'
               }`}>
                 {count} {count === 1 ? 'scenario' : 'scenarios'}
               </span>
@@ -86,7 +86,7 @@ export default function ScenariosPanel({ scenarios }: { scenarios: Scenario[] })
       {selected && (
         <div className="mt-6">
           {filtered.length === 0 ? (
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-white/50">
               No active scenarios for {ROLES.find(r => r.type === selected)?.label} yet.
             </p>
           ) : (
@@ -94,18 +94,18 @@ export default function ScenariosPanel({ scenarios }: { scenarios: Scenario[] })
               {filtered.map(scenario => (
                 <li
                   key={scenario.id}
-                  className="flex items-start justify-between gap-4 rounded-xl border border-zinc-200 bg-white px-5 py-4"
+                  className="flex items-start justify-between gap-4 rounded-xl border border-white/10 bg-[#111827] px-5 py-4"
                 >
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-zinc-900">{scenario.title}</p>
+                    <p className="text-sm font-semibold text-white">{scenario.title}</p>
                     {scenario.description && (
-                      <p className="mt-1 text-sm text-zinc-500">{scenario.description}</p>
+                      <p className="mt-1 text-sm text-white/50">{scenario.description}</p>
                     )}
                   </div>
                   <button
                     onClick={() => handleStartSession(scenario.id)}
                     disabled={starting !== null}
-                    className="shrink-0 rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 disabled:opacity-50"
+                    className="shrink-0 rounded-md bg-[#2dd4bf] px-3 py-1.5 text-sm font-medium text-[#0a0e1a] transition-colors hover:bg-[#2dd4bf]/80 disabled:opacity-50"
                   >
                     {starting === scenario.id ? 'Starting…' : 'Start Session'}
                   </button>
@@ -117,11 +117,11 @@ export default function ScenariosPanel({ scenarios }: { scenarios: Scenario[] })
       )}
 
       {startError && (
-        <p className="mt-4 text-sm text-red-600">{startError}</p>
+        <p className="mt-4 text-sm text-red-400">{startError}</p>
       )}
 
       {!selected && (
-        <p className="mt-6 text-sm text-zinc-400">Select a role above to see available scenarios.</p>
+        <p className="mt-6 text-sm text-white/40">Select a role above to see available scenarios.</p>
       )}
     </section>
   )

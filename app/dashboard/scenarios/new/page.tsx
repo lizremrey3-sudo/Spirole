@@ -19,15 +19,15 @@ export default async function NewScenarioPage() {
   if (profile?.role !== 'admin') redirect('/dashboard')
 
   return (
-    <div className="flex min-h-full flex-col bg-zinc-50">
-      <header className="flex items-center justify-between border-b border-zinc-200 bg-white px-6 py-4">
-        <span className="text-sm font-semibold tracking-tight text-zinc-900">Spirole</span>
+    <div className="flex min-h-full flex-col bg-[#0a0e1a]">
+      <header className="flex items-center justify-between border-b border-white/10 bg-[#111827] px-6 py-4">
+        <span className="text-sm font-semibold tracking-tight text-white">Spirole</span>
         <div className="flex items-center gap-4">
-          <span className="text-sm text-zinc-500">{user.email}</span>
+          <span className="text-sm text-white/50">{user.email}</span>
           <form action={signOut}>
             <button
               type="submit"
-              className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100"
+              className="rounded-md border border-white/15 px-3 py-1.5 text-sm font-medium text-white/70 transition-colors hover:bg-white/10"
             >
               Sign out
             </button>
@@ -38,17 +38,17 @@ export default async function NewScenarioPage() {
       <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-10">
         <Link
           href="/dashboard"
-          className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-700"
+          className="inline-flex items-center gap-1 text-sm text-white/50 hover:text-white/70"
         >
           ← Back to dashboard
         </Link>
 
         <div className="mb-8 mt-4">
-          <h1 className="text-2xl font-semibold text-zinc-900">New Scenario</h1>
-          <p className="mt-1 text-sm text-zinc-500">Create a training scenario for your team.</p>
+          <h1 className="text-2xl font-semibold text-white">New Scenario</h1>
+          <p className="mt-1 text-sm text-white/50">Create a training scenario for your team.</p>
         </div>
 
-        <div className="rounded-xl border border-zinc-200 bg-white px-6 py-6">
+        <div className="rounded-xl border border-white/10 bg-[#111827] px-6 py-6">
           <ScenarioForm />
         </div>
       </main>

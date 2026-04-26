@@ -11,9 +11,9 @@ type EvalResult = {
 }
 
 function scoreColor(s: number) {
-  if (s >= 70) return 'text-green-700 bg-green-50'
-  if (s >= 40) return 'text-yellow-700 bg-yellow-50'
-  return 'text-red-700 bg-red-50'
+  if (s >= 70) return 'text-green-400 bg-green-500/10'
+  if (s >= 40) return 'text-yellow-400 bg-yellow-500/10'
+  return 'text-red-400 bg-red-500/10'
 }
 
 export default async function AssociatePage() {
@@ -47,18 +47,17 @@ export default async function AssociatePage() {
     .filter(s => s.score !== null)
     .map(s => ({ score: s.score as number, date: s.completedAt, label: s.title }))
 
-  // Reverse for most-recent-first display
   const displaySessions = [...sessions].reverse()
 
   return (
-    <div className="flex min-h-full flex-col bg-zinc-50">
+    <div className="flex min-h-full flex-col bg-[#0a0e1a]">
       <DashboardNav email={user.email ?? ''} />
 
       <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-10">
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-zinc-900">My Sessions</h1>
-            <p className="mt-1 text-sm text-zinc-500">
+            <h1 className="text-2xl font-semibold text-white">My Sessions</h1>
+            <p className="mt-1 text-sm text-white/50">
               {sessions.length === 0
                 ? 'No completed sessions yet.'
                 : `${sessions.length} completed session${sessions.length === 1 ? '' : 's'}`}
@@ -66,7 +65,7 @@ export default async function AssociatePage() {
           </div>
           <Link
             href="/dashboard"
-            className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700"
+            className="rounded-md bg-[#2dd4bf] px-4 py-2 text-sm font-medium text-[#0a0e1a] transition-colors hover:bg-[#2dd4bf]/80"
           >
             Start New Session
           </Link>
@@ -79,13 +78,13 @@ export default async function AssociatePage() {
         )}
 
         {displaySessions.length === 0 ? (
-          <div className="rounded-xl border border-zinc-200 bg-white px-6 py-12 text-center">
-            <p className="text-sm text-zinc-500">
+          <div className="rounded-xl border border-white/10 bg-[#111827] px-6 py-12 text-center">
+            <p className="text-sm text-white/50">
               Complete a session to see your history here.
             </p>
             <Link
               href="/dashboard"
-              className="mt-4 inline-block rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700"
+              className="mt-4 inline-block rounded-md bg-[#2dd4bf] px-4 py-2 text-sm font-medium text-[#0a0e1a] hover:bg-[#2dd4bf]/80"
             >
               Start a Session
             </Link>
@@ -96,11 +95,11 @@ export default async function AssociatePage() {
               <Link
                 key={session.id}
                 href={`/dashboard/session/${session.id}`}
-                className="flex items-center justify-between gap-4 rounded-xl border border-zinc-200 bg-white px-5 py-4 transition-colors hover:border-zinc-300 hover:shadow-sm"
+                className="flex items-center justify-between gap-4 rounded-xl border border-white/10 bg-[#111827] px-5 py-4 transition-colors hover:border-white/20 hover:bg-white/5"
               >
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-zinc-900">{session.title}</p>
-                  <p className="mt-0.5 text-xs text-zinc-400">
+                  <p className="truncate text-sm font-semibold text-white">{session.title}</p>
+                  <p className="mt-0.5 text-xs text-white/40">
                     {new Date(session.completedAt).toLocaleDateString('en-US', {
                       month: 'long', day: 'numeric', year: 'numeric',
                     })}
@@ -112,7 +111,7 @@ export default async function AssociatePage() {
                     <span className="ml-0.5 text-xs font-normal opacity-60">/100</span>
                   </span>
                 ) : (
-                  <span className="shrink-0 text-xs text-zinc-400">—</span>
+                  <span className="shrink-0 text-xs text-white/40">—</span>
                 )}
               </Link>
             ))}

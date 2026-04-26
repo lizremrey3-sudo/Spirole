@@ -19,7 +19,6 @@ type Props = {
 
 const MIN_TURNS = 6
 
-// Minimal local types — Web Speech API is not in all TypeScript DOM lib versions
 interface SR {
   continuous: boolean
   interimResults: boolean
@@ -72,7 +71,6 @@ export default function ChatInterface({
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, streamingText])
 
-  // Stop recognition if the session ends or a message starts streaming
   useEffect(() => {
     if (isStreaming || isEnding) {
       recognitionRef.current?.stop()
@@ -136,7 +134,6 @@ export default function ChatInterface({
     recognition.start()
     setIsListening(true)
 
-    // Capture audio in parallel with speech recognition
     if (typeof navigator !== 'undefined' && navigator.mediaDevices) {
       navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
         const mr = new MediaRecorder(stream, { mimeType: 'audio/webm' })
@@ -148,7 +145,7 @@ export default function ChatInterface({
         }
         mr.start()
         mediaRecorderRef.current = mr
-      }).catch(() => { /* microphone denied — speech recognition may still work */ })
+      }).catch(() => { /* microphone denied */ })
     }
   }
 
@@ -220,7 +217,6 @@ export default function ChatInterface({
     }
     setEndError(null)
     startEnding(async () => {
-      // Upload any captured audio before evaluation (non-blocking on failure)
       recognitionRef.current?.stop()
       stopMediaRecorder()
       const chunks = audioChunksRef.current
@@ -244,10 +240,10 @@ export default function ChatInterface({
   }
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden">
+    <div className="flex flex-1 flex-col overflow-hidden bg-[#0a0e1a]">
       {/* Message list */}
       <div className="flex-1 overflow-y-auto px-4 py-6">
-        <div className="mx-auto max-w-2xl flex flex-col gap-4">
+        <div className="mx-auto flex max-w-2xl flex-col gap-4">
           {messages.map(msg => (
             <MessageBubble key={msg.id} role={msg.role} content={msg.content} personaName={personaName} />
           ))}
@@ -258,7 +254,7 @@ export default function ChatInterface({
 
           {isStreaming && !streamingText && (
             <div className="flex justify-start">
-              <div className="rounded-2xl bg-white border border-zinc-200 px-4 py-3 text-sm text-zinc-400 shadow-sm">
+              <div className="rounded-2xl border border-white/10 bg-[#111827] px-4 py-3 text-sm text-white/40 shadow-sm">
                 <span className="animate-pulse">{personaName} is typing…</span>
               </div>
             </div>
@@ -268,19 +264,18 @@ export default function ChatInterface({
         </div>
       </div>
 
-      {/* End session error */}
       {endError && (
         <div className="mx-auto w-full max-w-2xl px-4">
-          <p className="mb-2 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700 border border-red-200">
+          <p className="mb-2 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-2 text-sm text-red-400">
             {endError}
           </p>
         </div>
       )}
 
       {/* Input bar */}
-      <div className="border-t border-zinc-200 bg-white px-4 py-4">
-        <div className="mx-auto max-w-2xl flex gap-2 items-end">
-          <div className="flex-1 flex flex-col gap-1">
+      <div className="border-t border-white/10 bg-[#111827] px-4 py-4">
+        <div className="mx-auto flex max-w-2xl items-end gap-2">
+          <div className="flex flex-1 flex-col gap-1">
             <textarea
               ref={textareaRef}
               value={input}
@@ -289,7 +284,7 @@ export default function ChatInterface({
               placeholder="Type a message… (Enter to send, Shift+Enter for newline)"
               disabled={isStreaming || isEnding}
               rows={1}
-              className="w-full resize-none rounded-xl border border-zinc-300 px-4 py-3 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 disabled:opacity-50"
+              className="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/30 focus:border-[#2dd4bf]/60 focus:outline-none focus:ring-1 focus:ring-[#2dd4bf]/40 disabled:opacity-50"
               style={{ maxHeight: '120px' }}
               onInput={e => {
                 const el = e.currentTarget
@@ -298,7 +293,7 @@ export default function ChatInterface({
               }}
             />
             {interimText && (
-              <p className="px-1 text-xs text-zinc-400 italic truncate">
+              <p className="truncate px-1 text-xs italic text-white/40">
                 {interimText}
               </p>
             )}
@@ -312,8 +307,8 @@ export default function ChatInterface({
               className={[
                 'shrink-0 rounded-xl border p-3 transition-colors disabled:opacity-40',
                 isListening
-                  ? 'border-red-200 bg-red-50 text-red-600 animate-pulse'
-                  : 'border-zinc-200 bg-white text-zinc-500 hover:bg-zinc-50 hover:text-zinc-700',
+                  ? 'animate-pulse border-red-500/30 bg-red-500/10 text-red-400'
+                  : 'border-white/10 bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/70',
               ].join(' ')}
             >
               <MicIcon />
@@ -323,19 +318,19 @@ export default function ChatInterface({
           <button
             onClick={sendMessage}
             disabled={!input.trim() || isStreaming || isEnding}
-            className="shrink-0 rounded-xl bg-zinc-900 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-zinc-700 disabled:opacity-40"
+            className="shrink-0 rounded-xl bg-[#2dd4bf] px-4 py-3 text-sm font-medium text-[#0a0e1a] transition-colors hover:bg-[#2dd4bf]/80 disabled:opacity-40"
           >
             Send
           </button>
           <button
             onClick={handleEndSession}
             disabled={isStreaming || isEnding}
-            className="shrink-0 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 transition-colors hover:bg-red-100 disabled:opacity-40"
+            className="shrink-0 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/20 disabled:opacity-40"
           >
             {isEnding ? 'Evaluating…' : 'End Session'}
           </button>
         </div>
-        <p className="mt-2 text-center text-xs text-zinc-400">
+        <p className="mt-2 text-center text-xs text-white/40">
           {userTurns < MIN_TURNS
             ? `${MIN_TURNS - userTurns} more exchange${MIN_TURNS - userTurns === 1 ? '' : 's'} needed before ending`
             : 'Ready to end — click End Session when finished'}
@@ -371,13 +366,15 @@ function MessageBubble({
   const isUser = role === 'user'
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
-      <div className={`max-w-[80%] flex flex-col gap-1 ${isUser ? 'items-end' : 'items-start'}`}>
-        <span className="px-1 text-xs font-medium text-zinc-400">
+      <div className={`flex max-w-[80%] flex-col gap-1 ${isUser ? 'items-end' : 'items-start'}`}>
+        <span className="px-1 text-xs font-medium text-white/40">
           {isUser ? 'You' : personaName}
         </span>
         <div className={[
           'rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm whitespace-pre-wrap',
-          isUser ? 'bg-zinc-900 text-white' : 'bg-white border border-zinc-200 text-zinc-900',
+          isUser
+            ? 'bg-[#2dd4bf] text-[#0a0e1a]'
+            : 'border border-white/10 bg-[#111827] text-white',
           streaming ? 'opacity-80' : '',
         ].join(' ')}>
           {content}
