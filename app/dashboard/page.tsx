@@ -35,7 +35,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex min-h-full flex-col bg-[#0a0e1a]">
-      <DashboardNav email={user.email ?? ''} />
+      <DashboardNav email={user.email ?? ''} role={profile?.role ?? undefined} />
 
       <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-10">
         <div className="mb-8">

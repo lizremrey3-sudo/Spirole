@@ -126,7 +126,7 @@ export default async function TenantDashboard() {
 
   return (
     <div className="flex min-h-full flex-col bg-[#0a0e1a]">
-      <DashboardNav email={user.email ?? ''} dashboardHref="/dashboard/tenant" />
+      <DashboardNav email={user.email ?? ''} dashboardHref="/dashboard/tenant" role="admin" />
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
 

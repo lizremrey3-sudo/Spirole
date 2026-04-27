@@ -7,9 +7,11 @@ import { signOut } from '@/app/actions/auth'
 export default function DashboardNav({
   email,
   dashboardHref = '/dashboard',
+  role,
 }: {
   email: string
   dashboardHref?: string
+  role?: string
 }) {
   const pathname = usePathname()
 
@@ -17,6 +19,7 @@ export default function DashboardNav({
     { href: dashboardHref, label: 'Dashboard' },
     { href: '/dashboard/associate', label: 'My Sessions' },
     { href: '/dashboard/think', label: 'Think It Through' },
+    ...(role === 'admin' ? [{ href: '/dashboard/tenant', label: 'Admin Panel' }] : []),
   ]
 
   const isActive = (href: string) =>

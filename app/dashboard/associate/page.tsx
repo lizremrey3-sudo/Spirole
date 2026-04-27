@@ -3,19 +3,11 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import ScoreChart from './score-chart'
 import DashboardNav from '../dashboard-nav'
-import ScenariosPanel from '../scenarios-panel'
 
 type EvalResult = {
   scores: Record<string, { score: number; rationale: string }>
   overall_feedback: string
   rubric_dimensions?: { name: string; weight: number; description: string }[]
-}
-
-type ScenarioRow = {
-  id: string
-  title: string
-  description: string | null
-  associate_type: 'manager' | 'optician' | 'technician' | 'receptionist'
 }
 
 function scoreColor(s: number) {
@@ -32,21 +24,15 @@ export default async function AssociatePage() {
   const { data: subscription } = await supabase.from('subscriptions').select('status').maybeSingle()
   if (!subscription || subscription.status === 'inactive') redirect('/pricing')
 
-  const [{ data: raw }, { data: scenariosRaw }] = await Promise.all([
+  const [{ data: profile }, { data: raw }] = await Promise.all([
+    supabase.from('users').select('role').eq('id', user.id).single(),
     supabase
       .from('sessions')
       .select('id, score, feedback, completed_at, scenarios(title)')
       .eq('user_id', user.id)
       .eq('status', 'completed')
       .order('completed_at', { ascending: true }),
-    supabase
-      .from('scenarios')
-      .select('id, title, description, associate_type')
-      .eq('is_active', true)
-      .order('title'),
   ])
-
-  const scenarios = (scenariosRaw ?? []) as ScenarioRow[]
 
   const sessions = (raw ?? []).map(s => {
     const scenarioRaw = Array.isArray(s.scenarios) ? s.scenarios[0] : s.scenarios
@@ -68,16 +54,10 @@ export default async function AssociatePage() {
 
   return (
     <div className="flex min-h-full flex-col bg-[#0a0e1a]">
-      <DashboardNav email={user.email ?? ''} />
+      <DashboardNav email={user.email ?? ''} role={profile?.role ?? undefined} />
 
       <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-10">
 
-        {/* Scenarios */}
-        <div className="mb-10 rounded-xl border border-white/10 bg-[#111827] p-6">
-          <ScenariosPanel scenarios={scenarios} />
-        </div>
-
-        {/* Session history */}
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-base font-semibold text-white">
             Session History
