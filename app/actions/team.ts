@@ -1,6 +1,5 @@
 'use server'
 
-import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
@@ -19,9 +18,7 @@ export async function sendPasswordReset(email: string): Promise<{ error?: string
     return { error: 'Not authorized.' }
   }
 
-  const headersList = await headers()
-  const origin = headersList.get('origin') ?? headersList.get('host') ?? 'http://localhost:3000'
-  const baseUrl = origin.startsWith('http') ? origin : `https://${origin}`
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.spiroletrainer.com'
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${baseUrl}/auth/callback`,

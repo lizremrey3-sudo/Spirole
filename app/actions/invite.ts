@@ -1,6 +1,5 @@
 'use server'
 
-import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
@@ -28,9 +27,7 @@ export async function inviteUser(_: ActionState, formData: FormData): Promise<Ac
     return { error: 'Only admins and managers can invite users.' }
   }
 
-  const headersList = await headers()
-  const origin = headersList.get('origin') ?? headersList.get('host') ?? 'http://localhost:3000'
-  const baseUrl = origin.startsWith('http') ? origin : `https://${origin}`
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.spiroletrainer.com'
 
   const admin = createAdminClient()
   const { error } = await admin.auth.admin.inviteUserByEmail(email, {
