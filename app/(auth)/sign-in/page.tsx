@@ -1,14 +1,23 @@
 'use client'
 
 import { useActionState, useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { signIn } from '@/app/actions/auth'
 
 const LINK_EXPIRED_MSG = 'This link has expired. Please request a new invite.'
 
 export default function SignInPage() {
+  const router = useRouter()
   const [state, action, isPending] = useActionState(signIn, null)
   const [urlError, setUrlError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (state?.message === 'ok') {
+      router.push('/dashboard')
+      return
+    }
+  }, [state, router])
 
   useEffect(() => {
     // Handle ?error= query param (PKCE flow errors redirected from /auth/callback)
@@ -30,7 +39,7 @@ export default function SignInPage() {
     }
   }, [])
 
-  const displayError = state?.error ?? urlError
+  const displayError = state?.message === 'ok' ? null : (state?.error ?? urlError)
 
   return (
     <>

@@ -59,7 +59,7 @@ export async function signIn(_: ActionState, formData: FormData): Promise<Action
 
   if (error) return { error: error.message }
 
-  redirect('/dashboard')
+  return { message: 'ok' }
 }
 
 export async function signOut() {

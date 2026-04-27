@@ -38,10 +38,6 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/sign-in', request.url))
   }
 
-  if (user && (pathname === '/sign-in' || pathname === '/sign-up')) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
-  }
-
   return supabaseResponse
 }
 
