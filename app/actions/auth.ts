@@ -67,3 +67,18 @@ export async function signOut() {
   await supabase.auth.signOut()
   redirect('/')
 }
+
+export async function forgotPassword(_: ActionState, formData: FormData): Promise<ActionState> {
+  const email = (formData.get('email') as string).trim()
+  if (!email) return { error: 'Email is required.' }
+
+  const supabase = await createClient()
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.spiroletrainer.com'
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${baseUrl}/auth/callback`,
+  })
+
+  if (error) return { error: error.message }
+  return { message: 'Check your email for a password reset link.' }
+}

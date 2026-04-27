@@ -34,6 +34,12 @@ export async function GET(request: NextRequest) {
 
   console.log('[callback] user_metadata:', JSON.stringify(user.user_metadata))
 
+  // Password reset — send straight to set-password regardless of profile state
+  if (type === 'recovery') {
+    console.log('[callback] recovery flow — redirecting to /auth/set-password')
+    return NextResponse.redirect(new URL('/auth/set-password', request.url))
+  }
+
   const admin = createAdminClient()
 
   const { data: profile, error: profileLookupError } = await admin
@@ -107,8 +113,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/auth/set-password', request.url))
   }
 
-  if (type === 'invite') {
-    console.log('[callback] returning user on invite link — redirecting to /auth/set-password')
+  // Invited user with existing profile (e.g. PKCE flow where type is absent, or re-clicked link)
+  // Detected via tenant_id in user_metadata which is only set by our invite flow
+  const isInviteFlow = type === 'invite' || !!user.user_metadata?.tenant_id
+  if (isInviteFlow) {
+    console.log('[callback] invited user with existing profile — redirecting to /auth/set-password')
     return NextResponse.redirect(new URL('/auth/set-password', request.url))
   }
 
