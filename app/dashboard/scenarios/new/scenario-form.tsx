@@ -38,7 +38,13 @@ function validateJson(str: string): string | null {
 
 const inputCls = 'rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-[#2dd4bf]/60 focus:ring-1 focus:ring-[#2dd4bf]/40'
 
-export default function ScenarioForm() {
+export default function ScenarioForm({
+  defaultAssociateType,
+  defaultSessionType,
+}: {
+  defaultAssociateType?: string
+  defaultSessionType?: string
+} = {}) {
   const [state, formAction, pending] = useActionState(createScenario, null)
 
   const [persona, setPersona] = useState(DEFAULT_PERSONA)
@@ -74,7 +80,7 @@ export default function ScenarioForm() {
           id="associate_type"
           name="associate_type"
           required
-          defaultValue="optician"
+          defaultValue={defaultAssociateType ?? 'optician'}
           className={`${inputCls} bg-[#0a0e1a]`}
         >
           {ASSOCIATE_TYPES.map(({ value, label }) => (
@@ -88,7 +94,7 @@ export default function ScenarioForm() {
         <select
           id="session_type"
           name="session_type"
-          defaultValue="sales_roleplay"
+          defaultValue={defaultSessionType ?? 'sales_roleplay'}
           className={`${inputCls} bg-[#0a0e1a]`}
         >
           <option value="sales_roleplay">Sales Roleplay</option>

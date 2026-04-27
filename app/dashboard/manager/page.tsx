@@ -63,11 +63,12 @@ export default async function ManagerDashboard() {
 
   const { data: profile } = await supabase
     .from('users')
-    .select('role, tenant_id')
+    .select('role, tenant_id, is_active')
     .eq('id', user.id)
     .single()
 
   if (!profile || !['manager', 'admin'].includes(profile.role as string)) redirect('/dashboard')
+  if ((profile as { is_active?: boolean }).is_active === false) redirect('/deactivated')
 
   const tenantId = profile.tenant_id as string
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()

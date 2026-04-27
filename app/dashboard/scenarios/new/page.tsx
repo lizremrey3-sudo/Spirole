@@ -4,7 +4,12 @@ import { createClient } from '@/lib/supabase/server'
 import { signOut } from '@/app/actions/auth'
 import ScenarioForm from './scenario-form'
 
-export default async function NewScenarioPage() {
+export default async function NewScenarioPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ associate_type?: string; session_type?: string }>
+}) {
+  const { associate_type, session_type } = await searchParams
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -49,7 +54,7 @@ export default async function NewScenarioPage() {
         </div>
 
         <div className="rounded-xl border border-white/10 bg-[#111827] px-6 py-6">
-          <ScenarioForm />
+          <ScenarioForm defaultAssociateType={associate_type} defaultSessionType={session_type} />
         </div>
       </main>
     </div>

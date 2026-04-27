@@ -18,12 +18,14 @@ export default async function DashboardPage() {
   if (!user) redirect('/sign-in')
 
   const [{ data: profile }, { data: scenarios }, { data: subscription }] = await Promise.all([
-    supabase.from('users').select('full_name, role').eq('id', user.id).single(),
+    supabase.from('users').select('full_name, role, is_active').eq('id', user.id).single(),
     supabase.from('scenarios').select('id, title, description, associate_type').eq('is_active', true),
     supabase.from('subscriptions').select('status').maybeSingle(),
   ])
 
   if (!subscription || subscription.status === 'inactive') redirect('/pricing')
+
+  if ((profile as { is_active?: boolean } | null)?.is_active === false) redirect('/deactivated')
 
   if (profile?.role === 'admin')   redirect('/dashboard/tenant')
   if (profile?.role === 'manager') redirect('/dashboard/manager')

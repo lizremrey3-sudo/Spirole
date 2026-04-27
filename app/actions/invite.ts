@@ -9,6 +9,7 @@ type ActionState = { error?: string; message?: string } | null
 export async function inviteUser(_: ActionState, formData: FormData): Promise<ActionState> {
   const email = (formData.get('email') as string | null)?.trim()
   const role = (formData.get('role') as string) || 'rep'
+  const practiceName = (formData.get('practice_name') as string | null)?.trim() || undefined
 
   if (!email) return { error: 'Email is required.' }
 
@@ -33,7 +34,7 @@ export async function inviteUser(_: ActionState, formData: FormData): Promise<Ac
 
   const admin = createAdminClient()
   const { error } = await admin.auth.admin.inviteUserByEmail(email, {
-    data: { tenant_id: profile.tenant_id, role },
+    data: { tenant_id: profile.tenant_id, role, practice_name: practiceName },
     redirectTo: `${baseUrl}/auth/callback`,
   })
 

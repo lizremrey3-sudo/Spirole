@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import DashboardNav from '@/app/dashboard/dashboard-nav'
 import AssessmentPanel from '@/app/dashboard/assessment-panel'
 import PracticeTrendChart from './practice-trend-chart'
+import TeamPanel from './team-panel'
 import type { AssessmentContent } from '@/app/actions/assessments'
 
 function computeWeekBins() {
@@ -40,11 +41,12 @@ export default async function TenantDashboard() {
     .single()
 
   if (profile?.role !== 'admin') redirect('/dashboard')
+  if ((profile as { is_active?: boolean } | null)?.is_active === false) redirect('/deactivated')
 
   const tenantId = profile.tenant_id as string
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
 
-  const [tenantResult, sessionsResult, assessmentResult] = await Promise.all([
+  const [tenantResult, sessionsResult, assessmentResult, membersResult, practicesResult] = await Promise.all([
     supabase.from('tenants').select('name').eq('id', tenantId).single(),
     supabase
       .from('sessions')
@@ -61,9 +63,27 @@ export default async function TenantDashboard() {
       .order('generated_at', { ascending: false })
       .limit(1)
       .maybeSingle(),
+    supabase
+      .from('users')
+      .select('id, full_name, email, role, is_active, practices(name)')
+      .eq('tenant_id', tenantId)
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('practices')
+      .select('id, name')
+      .eq('tenant_id', tenantId)
+      .order('name', { ascending: true }),
   ])
 
   const practiceName = (tenantResult.data?.name as string | null) ?? 'My Practice'
+
+  type RawMember = { id: string; full_name: string | null; email: string | null; role: string; is_active: boolean; practices: { name: string } | { name: string }[] | null }
+  const teamMembers = ((membersResult.data ?? []) as RawMember[]).map(m => ({
+    ...m,
+    is_active: m.is_active !== false,
+    practices: Array.isArray(m.practices) ? (m.practices[0] ?? null) : m.practices,
+  }))
+  const practices = (practicesResult.data ?? []) as { id: string; name: string }[]
   const allSessions = (sessionsResult.data ?? []) as {
     score: string | number
     completed_at: string
@@ -165,6 +185,12 @@ export default async function TenantDashboard() {
             tenantId={tenantId}
             initial={cachedAssessment}
             label="Practice"
+          />
+
+          <TeamPanel
+            initialMembers={teamMembers}
+            practices={practices}
+            currentUserId={user.id}
           />
         </div>
       </main>

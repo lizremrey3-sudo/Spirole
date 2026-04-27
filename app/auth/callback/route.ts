@@ -40,9 +40,32 @@ export async function GET(request: NextRequest) {
     // Invited user — build profile from invite metadata
     const metaTenantId = user.user_metadata?.tenant_id as string | undefined
     const metaRole = (user.user_metadata?.role as string) || 'rep'
+    const metaPracticeName = user.user_metadata?.practice_name as string | undefined
 
     if (!metaTenantId) {
       return NextResponse.redirect(new URL('/sign-in?error=missing_tenant', request.url))
+    }
+
+    // Find or create the practice if one was specified in the invite
+    let practiceId: string | null = null
+    if (metaPracticeName) {
+      const { data: existing } = await admin
+        .from('practices')
+        .select('id')
+        .eq('tenant_id', metaTenantId)
+        .eq('name', metaPracticeName)
+        .maybeSingle()
+
+      if (existing) {
+        practiceId = existing.id as string
+      } else {
+        const { data: created } = await admin
+          .from('practices')
+          .insert({ tenant_id: metaTenantId, name: metaPracticeName })
+          .select('id')
+          .single()
+        practiceId = (created?.id as string) ?? null
+      }
     }
 
     const { error: profileError } = await admin.from('users').insert({
@@ -50,6 +73,7 @@ export async function GET(request: NextRequest) {
       tenant_id: metaTenantId,
       role: metaRole,
       email: user.email,
+      practice_id: practiceId,
     })
 
     if (profileError) {
