@@ -51,13 +51,23 @@ export async function signUp(_: ActionState, formData: FormData): Promise<Action
 }
 
 export async function signIn(_: ActionState, formData: FormData): Promise<ActionState> {
-  const email = (formData.get('email') as string).trim()
-  const password = formData.get('password') as string
+  const email = (formData.get('email') as string | null)?.trim()
+  const password = formData.get('password') as string | null
+
+  if (!email || !password) return { error: 'Email and password are required.' }
 
   const supabase = await createClient()
   const { error } = await supabase.auth.signInWithPassword({ email, password })
+  console.log('[signIn] signInWithPassword:', error ? `error: ${error.message}` : 'ok')
 
   if (error) return { error: error.message }
+
+  // Verify the session cookie was actually written before we tell the client to navigate.
+  // setAll in server.ts silently swallows errors, so we need to confirm here.
+  const { data: { user }, error: getUserError } = await supabase.auth.getUser()
+  console.log('[signIn] getUser after sign-in:', getUserError ? `error: ${getUserError.message}` : `id=${user?.id}`)
+
+  if (!user) return { error: 'Sign in failed — session could not be created. Please try again.' }
 
   return { message: 'ok' }
 }

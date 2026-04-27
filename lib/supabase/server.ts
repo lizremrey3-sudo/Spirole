@@ -13,13 +13,14 @@ export async function createClient() {
           return cookieStore.getAll()
         },
         setAll(cookiesToSet) {
-          // Cookies can't be set during Server Component rendering.
-          // The proxy handles writing refreshed session cookies to the response.
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
               cookieStore.set(name, value, options)
             )
-          } catch {}
+          } catch (e) {
+            // Expected to throw in Server Components (read-only). Should not throw in Server Actions.
+            console.warn('[supabase/server] setAll failed (ok in Server Components):', e)
+          }
         },
       },
     }

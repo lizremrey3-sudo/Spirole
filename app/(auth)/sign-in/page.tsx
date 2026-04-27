@@ -1,23 +1,23 @@
 'use client'
 
 import { useActionState, useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { signIn } from '@/app/actions/auth'
 
 const LINK_EXPIRED_MSG = 'This link has expired. Please request a new invite.'
 
 export default function SignInPage() {
-  const router = useRouter()
   const [state, action, isPending] = useActionState(signIn, null)
   const [urlError, setUrlError] = useState<string | null>(null)
 
   useEffect(() => {
+    console.log('[sign-in] state:', state)
     if (state?.message === 'ok') {
-      router.push('/dashboard')
-      return
+      // Hard navigation so the server components get fresh cookies — router.push
+      // can serve a stale pre-auth RSC cache and miss the session.
+      window.location.assign('/dashboard')
     }
-  }, [state, router])
+  }, [state])
 
   useEffect(() => {
     // Handle ?error= query param (PKCE flow errors redirected from /auth/callback)
