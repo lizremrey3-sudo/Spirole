@@ -34,8 +34,6 @@ export async function GET(request: NextRequest) {
     .eq('id', user.id)
     .maybeSingle()
 
-  let tenantId: string
-
   if (!profile) {
     // Invited user — build profile from invite metadata
     const metaTenantId = user.user_metadata?.tenant_id as string | undefined
@@ -90,10 +88,16 @@ export async function GET(request: NextRequest) {
         .is('accepted_at', null)
     }
 
-    tenantId = metaTenantId
-  } else {
-    tenantId = profile.tenant_id
+    // New invited user — they need to set a password before accessing the app
+    return NextResponse.redirect(new URL('/auth/set-password', request.url))
   }
+
+  // Returning user on an invite link (e.g. clicked a second time)
+  if (type === 'invite') {
+    return NextResponse.redirect(new URL('/auth/set-password', request.url))
+  }
+
+  const tenantId = profile.tenant_id
 
   const { data: sub } = await admin
     .from('subscriptions')
