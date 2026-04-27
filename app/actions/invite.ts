@@ -30,14 +30,13 @@ export async function inviteUser(_: ActionState, formData: FormData): Promise<Ac
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.spiroletrainer.com'
 
   const admin = createAdminClient()
-  const { error } = await admin.auth.admin.inviteUserByEmail(email, {
+  const { data: inviteData, error } = await admin.auth.admin.inviteUserByEmail(email, {
     data: { tenant_id: profile.tenant_id, role, practice_name: practiceName },
     redirectTo: `${baseUrl}/auth/callback`,
   })
 
   if (error) return { error: error.message }
 
-  // Record the invitation (upsert so resend overwrites)
   await admin.from('invitations').upsert(
     {
       tenant_id: profile.tenant_id,
@@ -45,6 +44,7 @@ export async function inviteUser(_: ActionState, formData: FormData): Promise<Ac
       role,
       practice_name: practiceName ?? null,
       invited_by: user.id,
+      auth_user_id: inviteData.user.id,
       created_at: new Date().toISOString(),
       accepted_at: null,
     },
@@ -76,20 +76,37 @@ export async function resendInvite(_: ActionState, formData: FormData): Promise<
     return { error: 'Not authorized.' }
   }
 
+  const admin = createAdminClient()
+
+  // Delete the existing pending auth user so inviteUserByEmail can recreate them
+  const { data: existing } = await admin
+    .from('invitations')
+    .select('auth_user_id')
+    .eq('tenant_id', profile.tenant_id)
+    .eq('email', email)
+    .is('accepted_at', null)
+    .maybeSingle()
+
+  if (existing?.auth_user_id) {
+    await admin.auth.admin.deleteUser(existing.auth_user_id as string)
+  }
+
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.spiroletrainer.com'
 
-  const admin = createAdminClient()
-  const { error } = await admin.auth.admin.inviteUserByEmail(email, {
+  const { data: inviteData, error } = await admin.auth.admin.inviteUserByEmail(email, {
     data: { tenant_id: profile.tenant_id, role, practice_name: practiceName },
     redirectTo: `${baseUrl}/auth/callback`,
   })
 
   if (error) return { error: error.message }
 
-  // Update the invitation timestamp so the dashboard shows the latest send date
   await admin
     .from('invitations')
-    .update({ created_at: new Date().toISOString(), invited_by: user.id })
+    .update({
+      auth_user_id: inviteData.user.id,
+      created_at: new Date().toISOString(),
+      invited_by: user.id,
+    })
     .eq('tenant_id', profile.tenant_id)
     .eq('email', email)
     .is('accepted_at', null)
