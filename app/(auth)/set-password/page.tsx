@@ -26,7 +26,13 @@ export default function SetPasswordPage() {
 
     setPending(true)
     const supabase = createClient()
+
+    console.log('[set-password] checking session before updateUser')
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+    console.log('[set-password] session:', sessionError ? `error: ${sessionError.message}` : session ? `user=${session.user.email}` : 'no session')
+
     const { error: updateError } = await supabase.auth.updateUser({ password })
+    console.log('[set-password] updateUser:', updateError ? `error: ${updateError.message}` : 'ok')
     setPending(false)
 
     if (updateError) {
