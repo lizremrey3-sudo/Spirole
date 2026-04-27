@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { signIn } from '@/app/actions/auth'
+import { createClient } from '@/lib/supabase/client'
 
 const LINK_EXPIRED_MSG = 'This link has expired. Please request a new invite.'
 
@@ -28,14 +29,33 @@ export default function SignInPage() {
       return
     }
 
-    // Handle #error= hash fragment (implicit flow errors — never reach the server)
     const hash = window.location.hash.slice(1)
-    if (hash) {
-      const hashParams = new URLSearchParams(hash)
-      if (hashParams.get('error')) {
-        setUrlError(LINK_EXPIRED_MSG)
-        window.history.replaceState(null, '', window.location.pathname)
-      }
+    if (!hash) return
+
+    const hashParams = new URLSearchParams(hash)
+
+    // Implicit flow error (e.g. expired invite link) — never reaches the server
+    if (hashParams.get('error')) {
+      setUrlError(LINK_EXPIRED_MSG)
+      window.history.replaceState(null, '', window.location.pathname)
+      return
+    }
+
+    // Implicit flow invite or password-reset token — Supabase embeds the session
+    // in the hash fragment. Calling getSession() triggers the browser client to
+    // parse it and establish the session, then we hand off to /welcome.
+    const type = hashParams.get('type')
+    if (type === 'invite' || type === 'recovery') {
+      const supabase = createClient()
+      supabase.auth.getSession().then(({ data: { session }, error }) => {
+        console.log('[sign-in] implicit token type=%s session:', type, error ? `error: ${error.message}` : session ? `user=${session.user.email}` : 'null')
+        if (error || !session) {
+          setUrlError(LINK_EXPIRED_MSG)
+          window.history.replaceState(null, '', window.location.pathname)
+          return
+        }
+        window.location.assign('/welcome')
+      })
     }
   }, [])
 
