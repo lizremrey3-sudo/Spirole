@@ -46,7 +46,7 @@ export default async function TenantDashboard() {
   const tenantId = profile.tenant_id as string
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
 
-  const [tenantResult, sessionsResult, assessmentResult, membersResult, practicesResult] = await Promise.all([
+  const [tenantResult, sessionsResult, assessmentResult, membersResult, practicesResult, invitationsResult] = await Promise.all([
     supabase.from('tenants').select('name').eq('id', tenantId).single(),
     supabase
       .from('sessions')
@@ -73,6 +73,12 @@ export default async function TenantDashboard() {
       .select('id, name')
       .eq('tenant_id', tenantId)
       .order('name', { ascending: true }),
+    supabase
+      .from('invitations')
+      .select('id, email, role, practice_name, created_at')
+      .eq('tenant_id', tenantId)
+      .is('accepted_at', null)
+      .order('created_at', { ascending: false }),
   ])
 
   const practiceName = (tenantResult.data?.name as string | null) ?? 'My Practice'
@@ -84,6 +90,8 @@ export default async function TenantDashboard() {
     practices: Array.isArray(m.practices) ? (m.practices[0] ?? null) : m.practices,
   }))
   const practices = (practicesResult.data ?? []) as { id: string; name: string }[]
+  type PendingInvite = { id: string; email: string; role: string; practice_name: string | null; created_at: string }
+  const pendingInvites = (invitationsResult.data ?? []) as PendingInvite[]
   const allSessions = (sessionsResult.data ?? []) as {
     score: string | number
     completed_at: string
@@ -191,6 +199,7 @@ export default async function TenantDashboard() {
             initialMembers={teamMembers}
             practices={practices}
             currentUserId={user.id}
+            initialPendingInvites={pendingInvites}
           />
         </div>
       </main>

@@ -80,6 +80,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/sign-in?error=profile', request.url))
     }
 
+    // Mark the invitation as accepted
+    if (user.email) {
+      await admin
+        .from('invitations')
+        .update({ accepted_at: new Date().toISOString() })
+        .eq('tenant_id', metaTenantId)
+        .eq('email', user.email)
+        .is('accepted_at', null)
+    }
+
     tenantId = metaTenantId
   } else {
     tenantId = profile.tenant_id

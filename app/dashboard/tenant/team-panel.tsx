@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useActionState } from 'react'
-import { inviteUser } from '@/app/actions/invite'
+import { inviteUser, resendInvite } from '@/app/actions/invite'
 import { deactivateUser, reactivateUser, sendPasswordReset } from '@/app/actions/team'
 
 type Member = {
@@ -13,6 +13,14 @@ type Member = {
   role: string
   is_active: boolean
   practices: { name: string } | null
+}
+
+type PendingInvite = {
+  id: string
+  email: string
+  role: string
+  practice_name: string | null
+  created_at: string
 }
 
 type Practice = { id: string; name: string }
@@ -35,13 +43,16 @@ export default function TeamPanel({
   initialMembers,
   practices,
   currentUserId,
+  initialPendingInvites,
 }: {
   initialMembers: Member[]
   practices: Practice[]
   currentUserId: string
+  initialPendingInvites: PendingInvite[]
 }) {
   const router = useRouter()
   const [members, setMembers] = useState(initialMembers)
+  const [pendingInvites, setPendingInvites] = useState(initialPendingInvites)
   const [showInvite, setShowInvite] = useState(false)
   const [showScenarioMenu, setShowScenarioMenu] = useState(false)
   const [rowMessages, setRowMessages] = useState<Record<string, string>>({})
@@ -79,6 +90,40 @@ export default function TeamPanel({
       const result = await sendPasswordReset(email)
       setRowMsg(userId, result.error ?? 'Reset email sent.')
     })
+  }
+
+  const handleResend = (invite: PendingInvite) => {
+    startTransition(async () => {
+      const fd = new FormData()
+      fd.set('email', invite.email)
+      fd.set('role', invite.role)
+      if (invite.practice_name) fd.set('practice_name', invite.practice_name)
+      const result = await resendInvite(null, fd)
+      if (!result?.error) {
+        // Refresh the timestamp optimistically
+        setPendingInvites(prev =>
+          prev.map(inv => inv.id === invite.id
+            ? { ...inv, created_at: new Date().toISOString() }
+            : inv
+          )
+        )
+        setRowMsg(invite.id, 'Invite resent.')
+      } else {
+        setRowMsg(invite.id, result.error)
+      }
+    })
+  }
+
+  const handleInviteSent = (invite: { email: string; role: string; practice_name?: string }) => {
+    const placeholder: PendingInvite = {
+      id: `pending-${Date.now()}`,
+      email: invite.email,
+      role: invite.role,
+      practice_name: invite.practice_name ?? null,
+      created_at: new Date().toISOString(),
+    }
+    setPendingInvites(prev => [placeholder, ...prev])
+    setShowInvite(false)
   }
 
   const inputCls =
@@ -129,10 +174,15 @@ export default function TeamPanel({
         </div>
       </div>
 
-      {/* Team members list */}
+      {/* Active Members */}
       <div className="rounded-xl border border-white/10 bg-[#111827] overflow-hidden">
         <div className="border-b border-white/10 px-5 py-3">
-          <h2 className="text-sm font-semibold text-[#2dd4bf]">Team Members</h2>
+          <h2 className="text-sm font-semibold text-[#2dd4bf]">
+            Active Members
+            {members.length > 0 && (
+              <span className="ml-2 font-normal text-white/40">{members.length}</span>
+            )}
+          </h2>
         </div>
         {members.length === 0 ? (
           <p className="px-5 py-8 text-center text-sm text-white/40">No team members yet. Invite someone above.</p>
@@ -199,12 +249,57 @@ export default function TeamPanel({
         )}
       </div>
 
+      {/* Pending Invites */}
+      {pendingInvites.length > 0 && (
+        <div className="rounded-xl border border-white/10 bg-[#111827] overflow-hidden">
+          <div className="border-b border-white/10 px-5 py-3">
+            <h2 className="text-sm font-semibold text-[#2dd4bf]">
+              Pending Invites
+              <span className="ml-2 font-normal text-white/40">{pendingInvites.length}</span>
+            </h2>
+          </div>
+          <div className="divide-y divide-white/[0.06]">
+            {pendingInvites.map(inv => (
+              <div key={inv.id} className="flex items-center gap-4 px-5 py-3.5">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-white/80">{inv.email}</p>
+                  <p className="mt-0.5 text-xs text-white/40">
+                    Invited {new Date(inv.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </p>
+                </div>
+
+                <div className="hidden shrink-0 flex-col items-end text-right sm:flex">
+                  <span className="text-xs text-white/50">{ROLE_LABELS[inv.role] ?? inv.role}</span>
+                  {inv.practice_name && (
+                    <span className="text-xs text-white/30">{inv.practice_name}</span>
+                  )}
+                </div>
+
+                <div className="flex shrink-0 items-center gap-2">
+                  {rowMessages[inv.id] ? (
+                    <span className="max-w-[160px] truncate text-xs text-[#2dd4bf]">{rowMessages[inv.id]}</span>
+                  ) : (
+                    <button
+                      onClick={() => handleResend(inv)}
+                      className="rounded-md border border-white/10 px-3 py-1.5 text-xs text-white/50 transition-colors hover:bg-white/5 hover:text-white/70"
+                    >
+                      Resend Invite
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Invite modal */}
       {showInvite && (
         <InviteModal
           practices={practices}
           inputCls={inputCls}
           onClose={() => setShowInvite(false)}
+          onSent={handleInviteSent}
         />
       )}
     </div>
@@ -215,17 +310,28 @@ function InviteModal({
   practices,
   inputCls,
   onClose,
+  onSent,
 }: {
   practices: Practice[]
   inputCls: string
   onClose: () => void
+  onSent: (invite: { email: string; role: string; practice_name?: string }) => void
 }) {
   const [state, action, isPending] = useActionState(inviteUser, null)
+  const [email, setEmail] = useState('')
+  const [role, setRole] = useState('rep')
   const [practiceValue, setPracticeValue] = useState(
     practices.length > 0 ? practices[0].name : '__new__'
   )
   const [newPracticeName, setNewPracticeName] = useState('')
   const isCreatingNew = practiceValue === '__new__'
+
+  const resolvedPracticeName = isCreatingNew ? newPracticeName.trim() : practiceValue
+
+  // When the action succeeds, notify parent then close
+  if (state?.message) {
+    onSent({ email, role, practice_name: resolvedPracticeName || undefined })
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
@@ -238,84 +344,76 @@ function InviteModal({
         {state?.error && (
           <p className="mb-4 rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-400">{state.error}</p>
         )}
-        {state?.message ? (
-          <div className="flex flex-col items-center gap-4 py-4 text-center">
-            <p className="text-sm text-[#2dd4bf]">{state.message}</p>
+
+        <form action={action} className="flex flex-col gap-4">
+          {/* Hidden field carries the resolved practice name */}
+          <input type="hidden" name="practice_name" value={resolvedPracticeName} />
+
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-white/50">Email</label>
+            <input
+              name="email"
+              type="email"
+              required
+              placeholder="colleague@example.com"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              className={inputCls}
+            />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-white/50">Role</label>
+            <select
+              name="role"
+              value={role}
+              onChange={e => setRole(e.target.value)}
+              className={`${inputCls} bg-[#0a0e1a]`}
+            >
+              <option value="rep">Associate</option>
+              <option value="manager">Manager</option>
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-white/50">Practice</label>
+            <select
+              value={practiceValue}
+              onChange={e => setPracticeValue(e.target.value)}
+              className={`${inputCls} bg-[#0a0e1a]`}
+            >
+              {practices.map(p => (
+                <option key={p.id} value={p.name}>{p.name}</option>
+              ))}
+              <option value="__new__">+ Create new practice…</option>
+            </select>
+            {isCreatingNew && (
+              <input
+                placeholder="Practice name"
+                value={newPracticeName}
+                onChange={e => setNewPracticeName(e.target.value)}
+                className={`${inputCls} mt-1`}
+              />
+            )}
+          </div>
+
+          <div className="mt-1 flex justify-end gap-2">
             <button
+              type="button"
               onClick={onClose}
               className="rounded-lg border border-white/15 px-4 py-2 text-sm font-medium text-white/70 transition-colors hover:bg-white/10"
             >
-              Close
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isPending}
+              className="rounded-lg bg-[#2dd4bf] px-4 py-2 text-sm font-medium text-[#0a0e1a] transition-colors hover:bg-[#2dd4bf]/80 disabled:opacity-50"
+            >
+              {isPending ? 'Sending…' : 'Send Invite'}
             </button>
           </div>
-        ) : (
-          <form action={action} className="flex flex-col gap-4">
-            {/* Hidden field carries the resolved practice name */}
-            <input
-              type="hidden"
-              name="practice_name"
-              value={isCreatingNew ? newPracticeName.trim() : practiceValue}
-            />
-
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-white/50">Email</label>
-              <input
-                name="email"
-                type="email"
-                required
-                placeholder="colleague@example.com"
-                className={inputCls}
-              />
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-white/50">Role</label>
-              <select name="role" defaultValue="rep" className={`${inputCls} bg-[#0a0e1a]`}>
-                <option value="rep">Associate</option>
-                <option value="manager">Manager</option>
-              </select>
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-white/50">Practice</label>
-              <select
-                value={practiceValue}
-                onChange={e => setPracticeValue(e.target.value)}
-                className={`${inputCls} bg-[#0a0e1a]`}
-              >
-                {practices.map(p => (
-                  <option key={p.id} value={p.name}>{p.name}</option>
-                ))}
-                <option value="__new__">+ Create new practice…</option>
-              </select>
-              {isCreatingNew && (
-                <input
-                  placeholder="Practice name"
-                  value={newPracticeName}
-                  onChange={e => setNewPracticeName(e.target.value)}
-                  className={`${inputCls} mt-1`}
-                />
-              )}
-            </div>
-
-            <div className="mt-1 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={onClose}
-                className="rounded-lg border border-white/15 px-4 py-2 text-sm font-medium text-white/70 transition-colors hover:bg-white/10"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isPending}
-                className="rounded-lg bg-[#2dd4bf] px-4 py-2 text-sm font-medium text-[#0a0e1a] transition-colors hover:bg-[#2dd4bf]/80 disabled:opacity-50"
-              >
-                {isPending ? 'Sending…' : 'Send Invite'}
-              </button>
-            </div>
-          </form>
-        )}
+        </form>
       </div>
     </div>
   )
