@@ -78,17 +78,11 @@ export async function resendInvite(_: ActionState, formData: FormData): Promise<
 
   const admin = createAdminClient()
 
-  // Delete the existing pending auth user so inviteUserByEmail can recreate them
-  const { data: existing } = await admin
-    .from('invitations')
-    .select('auth_user_id')
-    .eq('tenant_id', profile.tenant_id)
-    .eq('email', email)
-    .is('accepted_at', null)
-    .maybeSingle()
-
-  if (existing?.auth_user_id) {
-    await admin.auth.admin.deleteUser(existing.auth_user_id as string)
+  // Find and delete the existing pending auth user by email so inviteUserByEmail can recreate them
+  const { data: listData } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 })
+  const existingAuthUser = listData?.users?.find(u => u.email === email)
+  if (existingAuthUser) {
+    await admin.auth.admin.deleteUser(existingAuthUser.id)
   }
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.spiroletrainer.com'
