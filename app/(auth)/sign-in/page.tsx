@@ -1,18 +1,43 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { signIn } from '@/app/actions/auth'
 
+const LINK_EXPIRED_MSG = 'This link has expired. Please request a new invite.'
+
 export default function SignInPage() {
   const [state, action, isPending] = useActionState(signIn, null)
+  const [urlError, setUrlError] = useState<string | null>(null)
+
+  useEffect(() => {
+    // Handle ?error= query param (PKCE flow errors redirected from /auth/callback)
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('error') === 'link_expired') {
+      setUrlError(LINK_EXPIRED_MSG)
+      window.history.replaceState(null, '', window.location.pathname)
+      return
+    }
+
+    // Handle #error= hash fragment (implicit flow errors — never reach the server)
+    const hash = window.location.hash.slice(1)
+    if (hash) {
+      const hashParams = new URLSearchParams(hash)
+      if (hashParams.get('error')) {
+        setUrlError(LINK_EXPIRED_MSG)
+        window.history.replaceState(null, '', window.location.pathname)
+      }
+    }
+  }, [])
+
+  const displayError = state?.error ?? urlError
 
   return (
     <>
       <h1 className="mb-8 text-2xl font-semibold tracking-tight text-white">Sign in</h1>
 
-      {state?.error && (
-        <p className="mb-4 rounded-md bg-red-500/10 px-4 py-3 text-sm text-red-400">{state.error}</p>
+      {displayError && (
+        <p className="mb-4 rounded-md bg-red-500/10 px-4 py-3 text-sm text-red-400">{displayError}</p>
       )}
 
       <form action={action} className="flex flex-col gap-4">

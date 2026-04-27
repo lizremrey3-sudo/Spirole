@@ -8,7 +8,14 @@ export async function GET(request: NextRequest) {
   const token_hash = searchParams.get('token_hash')
   const type = searchParams.get('type')
 
-  console.log('[callback] params:', { code: code ? `${code.slice(0, 8)}…` : null, token_hash: token_hash ? `${token_hash.slice(0, 8)}…` : null, type })
+  const errorParam = searchParams.get('error')
+  const errorDescription = searchParams.get('error_description')
+  console.log('[callback] params:', { code: code ? `${code.slice(0, 8)}…` : null, token_hash: token_hash ? `${token_hash.slice(0, 8)}…` : null, type, error: errorParam })
+
+  if (errorParam) {
+    console.log('[callback] error param received:', errorParam, errorDescription)
+    return NextResponse.redirect(new URL('/sign-in?error=link_expired', request.url))
+  }
 
   const supabase = await createClient()
 
