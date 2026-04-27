@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import ScoreChart from './score-chart'
 import DashboardNav from '../dashboard-nav'
 
@@ -21,11 +22,23 @@ export default async function AssociatePage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/sign-in')
 
-  const { data: subscription } = await supabase.from('subscriptions').select('status').maybeSingle()
+  const { data: profile } = await supabase
+    .from('users')
+    .select('role, tenant_id')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile?.tenant_id) redirect('/sign-in')
+
+  const admin = createAdminClient()
+  const { data: subscription } = await admin
+    .from('subscriptions')
+    .select('status')
+    .eq('tenant_id', profile.tenant_id)
+    .maybeSingle()
   if (!subscription || subscription.status === 'inactive') redirect('/pricing')
 
-  const [{ data: profile }, { data: raw }] = await Promise.all([
-    supabase.from('users').select('role').eq('id', user.id).single(),
+  const [{ data: raw }] = await Promise.all([
     supabase
       .from('sessions')
       .select('id, score, feedback, completed_at, scenarios(title)')

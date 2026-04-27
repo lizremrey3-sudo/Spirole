@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import ScenariosPanel from './scenarios-panel'
 import InviteForm from './invite-form'
 import DashboardNav from './dashboard-nav'
@@ -14,28 +15,35 @@ const ROLE_LABELS: Record<string, string> = {
 export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-
   if (!user) redirect('/sign-in')
 
-  const [{ data: profile }, { data: scenarios }, { data: subscription }] = await Promise.all([
-    supabase.from('users').select('full_name, role, is_active').eq('id', user.id).single(),
+  const { data: profile } = await supabase
+    .from('users')
+    .select('full_name, role, tenant_id, is_active')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile?.tenant_id) redirect('/sign-in')
+
+  if ((profile as { is_active?: boolean } | null)?.is_active === false) redirect('/deactivated')
+
+  const admin = createAdminClient()
+  const [{ data: scenarios }, { data: subscription }] = await Promise.all([
     supabase.from('scenarios').select('id, title, description, associate_type').eq('is_active', true),
-    supabase.from('subscriptions').select('status').maybeSingle(),
+    admin.from('subscriptions').select('status').eq('tenant_id', profile.tenant_id).maybeSingle(),
   ])
 
   if (!subscription || subscription.status === 'inactive') redirect('/pricing')
 
-  if ((profile as { is_active?: boolean } | null)?.is_active === false) redirect('/deactivated')
+  if (profile.role === 'admin')   redirect('/dashboard/tenant')
+  if (profile.role === 'manager') redirect('/dashboard/manager')
 
-  if (profile?.role === 'admin')   redirect('/dashboard/tenant')
-  if (profile?.role === 'manager') redirect('/dashboard/manager')
-
-  const displayName = profile?.full_name || user.email || 'there'
-  const roleLabel = ROLE_LABELS[profile?.role ?? ''] ?? profile?.role ?? ''
+  const displayName = profile.full_name || user.email || 'there'
+  const roleLabel = ROLE_LABELS[profile.role ?? ''] ?? profile.role ?? ''
 
   return (
     <div className="flex min-h-full flex-col bg-[#0a0e1a]">
-      <DashboardNav email={user.email ?? ''} role={profile?.role ?? undefined} />
+      <DashboardNav email={user.email ?? ''} role={profile.role ?? undefined} />
 
       <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-10">
         <div className="mb-8">
@@ -69,7 +77,7 @@ export default async function DashboardPage() {
 
         <ScenariosPanel scenarios={scenarios ?? []} />
 
-        {(profile?.role === 'admin' || profile?.role === 'manager') && (
+        {(profile.role === 'admin' || profile.role === 'manager') && (
           <div className="mt-10">
             <InviteForm />
           </div>
