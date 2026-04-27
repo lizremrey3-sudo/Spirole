@@ -5,19 +5,21 @@ import { createAdminClient } from '@/lib/supabase/admin'
 const HUME_API_KEY = process.env.HUME_API_KEY
 const HUME_BASE = 'https://api.hume.ai/v0/batch'
 
-// Emotion names in Hume prosody predictions we care about
-const EMOTION_MAP: Record<string, keyof VocalScores> = {
-  Confidence:  'confidence',
-  Warmth:      'warmth',
-  Confusion:   'hesitation',  // proxy
-  Excitement:  'enthusiasm',
-}
-
 type VocalScores = {
   confidence:  number
   warmth:      number
   hesitation:  number
   enthusiasm:  number
+}
+
+// Hume prosody returns ~48 specific emotions (softmax probabilities summing to ~1).
+// "Confidence" and "Warmth" are not Hume emotion names — map real names to our dimensions.
+// Multiple emotions per dimension are averaged per segment for a more robust signal.
+const DIMENSION_EMOTIONS: Record<keyof VocalScores, string[]> = {
+  confidence: ['Determination', 'Pride', 'Triumph'],
+  warmth:     ['Joy', 'Contentment', 'Sympathy'],
+  hesitation: ['Confusion', 'Doubt', 'Anxiety'],
+  enthusiasm: ['Enthusiasm', 'Excitement', 'Amusement'],
 }
 
 type HumeEmotion = { name: string; score: number }
@@ -39,9 +41,17 @@ function extractScores(files: HumeFileResult[]): VocalScores | null {
       if (!prosody) continue
       for (const group of prosody.grouped_predictions ?? []) {
         for (const segment of group.predictions ?? []) {
-          for (const emotion of segment.emotions ?? []) {
-            const key = EMOTION_MAP[emotion.name]
-            if (key) sums[key] += emotion.score
+          const emotions = segment.emotions ?? []
+          // Normalise each segment against its dominant emotion so scores reflect
+          // relative strength rather than absolute probability magnitude.
+          const maxScore = emotions.reduce((m, e) => Math.max(m, e.score), 0)
+          if (maxScore === 0) continue
+
+          const byName = new Map(emotions.map(e => [e.name, e.score / maxScore]))
+
+          for (const [dim, names] of Object.entries(DIMENSION_EMOTIONS) as [keyof VocalScores, string[]][]) {
+            const vals = names.map(n => byName.get(n) ?? 0)
+            sums[dim] += vals.reduce((a, b) => a + b, 0) / vals.length
           }
           count++
         }
@@ -51,11 +61,14 @@ function extractScores(files: HumeFileResult[]): VocalScores | null {
 
   if (count === 0) return null
 
+  // sqrt amplification: normalised avg ~0.16–0.49 → scores ~4–7
+  const toScore = (avg: number) => Math.min(Math.round(Math.sqrt(avg) * 100) / 10, 10)
+
   return {
-    confidence:  Math.round((sums.confidence / count) * 10 * 10) / 10,
-    warmth:      Math.round((sums.warmth / count) * 10 * 10) / 10,
-    hesitation:  Math.round((sums.hesitation / count) * 10 * 10) / 10,
-    enthusiasm:  Math.round((sums.enthusiasm / count) * 10 * 10) / 10,
+    confidence: toScore(sums.confidence / count),
+    warmth:     toScore(sums.warmth / count),
+    hesitation: toScore(sums.hesitation / count),
+    enthusiasm: toScore(sums.enthusiasm / count),
   }
 }
 

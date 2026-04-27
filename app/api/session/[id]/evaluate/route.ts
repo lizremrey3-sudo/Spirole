@@ -75,7 +75,7 @@ Return your evaluation as a valid JSON object with this exact structure:
   "improvements": ["<specific improvement 1>", "<specific improvement 2>"]
 }
 
-Do not evaluate or penalize punctuation, grammar, or spelling. Evaluate only communication quality, content, and interpersonal skills.
+IMPORTANT: The associate's responses were recorded via speech-to-text microphone and may lack punctuation, capitalization, or contain run-on sentences. Do not evaluate or penalize any of these — evaluate only the content, communication quality, empathy, product knowledge, and interpersonal skills. Treat all text as spoken word, not written text.
 
 Return ONLY the JSON object with no additional text or markdown.`
 }

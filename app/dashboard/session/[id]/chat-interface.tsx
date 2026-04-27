@@ -96,23 +96,25 @@ export default function ChatInterface({
     if (!Ctor) return
 
     const recognition = new Ctor()
-    recognition.continuous = false
-    recognition.interimResults = false
+    recognition.continuous = true
+    recognition.interimResults = true
     recognition.lang = 'en-US'
 
     recognition.onresult = (e: SREvent) => {
-      console.log('[SpeechRecognition] onresult', e)
       let final = ''
+      let interim = ''
       for (let i = e.resultIndex; i < e.results.length; i++) {
         if (e.results[i].isFinal) final += e.results[i][0].transcript
+        else interim += e.results[i][0].transcript
       }
-      console.log('[SpeechRecognition] final transcript:', final)
       if (final) {
         setInput(prev => {
           const base = prev.trimEnd()
           return base ? `${base} ${final.trim()}` : final.trim()
         })
         setInterimText('')
+      } else {
+        setInterimText(interim)
       }
     }
 
