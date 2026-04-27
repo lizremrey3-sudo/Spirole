@@ -65,7 +65,7 @@ function buildSalesPrompt(
   if (extraContext)   parts.push(`- Additional context: ${extraContext}`)
 
   if (patientContext) {
-    parts.push('\nYour patient record (respond consistently with these details when asked):')
+    parts.push('\nPatient record template (use as a starting point — vary the specifics each session):')
     const cr = patientContext.current_rx
     if (cr?.OD || cr?.OS || cr?.add) {
       parts.push(`- Current Rx: OD ${cr.OD || 'N/A'} | OS ${cr.OS || 'N/A'} | Add ${cr.add || 'N/A'}`)
@@ -82,6 +82,8 @@ function buildSalesPrompt(
   }
 
   parts.push(
+    '',
+    'IMPORTANT — Session variation: Generate fresh, unique patient details for every session — vary the patient\'s name, specific complaint details, appointment time, prescription values, insurance situation, and personality. Use the persona and patient_context fields as a template and starting point only, not as fixed facts to repeat verbatim. Every session should feel like a genuinely different patient encounter.',
     '',
     'Stay completely in character as the patient throughout the entire conversation.',
     'Do not break character, acknowledge being an AI, or offer coaching feedback.',
