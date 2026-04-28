@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import ScoreChart from './score-chart'
 import DashboardNav from '../dashboard-nav'
+import ScenariosPanel from '../scenarios-panel'
 
 type EvalResult = {
   scores: Record<string, { score: number; rationale: string }>
@@ -38,13 +39,17 @@ export default async function AssociatePage() {
     .maybeSingle()
   if (!subscription || subscription.status === 'inactive') redirect('/pricing')
 
-  const [{ data: raw }] = await Promise.all([
+  const [{ data: raw }, { data: scenarios }] = await Promise.all([
     supabase
       .from('sessions')
       .select('id, score, feedback, completed_at, scenarios(title)')
       .eq('user_id', user.id)
       .eq('status', 'completed')
       .order('completed_at', { ascending: true }),
+    supabase
+      .from('scenarios')
+      .select('id, title, description, associate_type')
+      .eq('is_active', true),
   ])
 
   const sessions = (raw ?? []).map(s => {
@@ -70,6 +75,10 @@ export default async function AssociatePage() {
       <DashboardNav email={user.email ?? ''} role={profile?.role ?? undefined} />
 
       <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-10">
+
+        <ScenariosPanel scenarios={scenarios ?? []} />
+
+        <div className="my-10 border-t border-white/10" />
 
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-base font-semibold text-white">

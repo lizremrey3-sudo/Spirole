@@ -2,7 +2,6 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import ScenariosPanel from './scenarios-panel'
 import InviteForm from './invite-form'
 import DashboardNav from './dashboard-nav'
 
@@ -33,20 +32,16 @@ export default async function DashboardPage() {
     if ((profile as { is_active?: boolean } | null)?.is_active === false) redirect('/deactivated')
 
     const admin = createAdminClient()
-    const [
-      { data: scenarios, error: scenariosError },
-      { data: subscription, error: subError },
-    ] = await Promise.all([
-      supabase.from('scenarios').select('id, title, description, associate_type').eq('is_active', true),
-      admin.from('subscriptions').select('status').eq('tenant_id', profile.tenant_id).maybeSingle(),
-    ])
+    const { data: subscription, error: subError } = await admin
+      .from('subscriptions')
+      .select('status')
+      .eq('tenant_id', profile.tenant_id)
+      .maybeSingle()
 
     console.log('[dashboard] subscription:', subError ? `error: ${subError.message}` : subscription ? `status=${subscription.status}` : 'null — no subscription row for tenant')
-    console.log('[dashboard] scenarios:', scenariosError ? `error: ${scenariosError.message}` : `count=${scenarios?.length ?? 0}`)
 
     if (!subscription || subscription.status === 'inactive') redirect('/pricing')
 
-    if (profile.role === 'admin')   redirect('/dashboard/tenant')
     if (profile.role === 'manager') redirect('/dashboard/manager')
 
     const displayName = profile.full_name || user.email || 'there'
@@ -85,8 +80,6 @@ export default async function DashboardPage() {
               Think It Through
             </Link>
           </div>
-
-          <ScenariosPanel scenarios={scenarios ?? []} />
 
           {(profile.role === 'admin' || profile.role === 'manager') && (
             <div className="mt-10">
