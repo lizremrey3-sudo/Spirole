@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import DashboardNav from '@/app/dashboard/dashboard-nav'
@@ -139,9 +140,17 @@ export default async function TenantDashboard() {
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
 
-        <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-white">{practiceName}</h1>
-          <p className="mt-1 text-sm text-white/50">Last 30 days · admin view</p>
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold text-white">{practiceName}</h1>
+            <p className="mt-1 text-sm text-white/50">Last 30 days · admin view</p>
+          </div>
+          <Link
+            href="/dashboard/manager/team-sessions"
+            className="rounded-md border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white/70 transition-colors hover:bg-white/10"
+          >
+            Team Sessions
+          </Link>
         </div>
 
         <div className="flex flex-col gap-6">
