@@ -94,13 +94,8 @@ export default function TeamPanel({
 
   const handleResend = (invite: PendingInvite) => {
     startTransition(async () => {
-      const fd = new FormData()
-      fd.set('email', invite.email)
-      fd.set('role', invite.role)
-      if (invite.practice_name) fd.set('practice_name', invite.practice_name)
-      const result = await resendInvite(null, fd)
+      const result = await resendInvite(invite.id)
       if (!result?.error) {
-        // Refresh the timestamp optimistically
         setPendingInvites(prev =>
           prev.map(inv => inv.id === invite.id
             ? { ...inv, created_at: new Date().toISOString() }
