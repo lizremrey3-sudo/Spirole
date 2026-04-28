@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import DashboardNav from '@/app/dashboard/dashboard-nav'
 import AssessmentPanel from '@/app/dashboard/assessment-panel'
 import PracticeTrendChart from './practice-trend-chart'
@@ -63,9 +64,9 @@ export default async function TenantDashboard() {
       .order('generated_at', { ascending: false })
       .limit(1)
       .maybeSingle(),
-    supabase
+    createAdminClient()
       .from('users')
-      .select('id, full_name, email, role, is_active, practices(name)')
+      .select('id, full_name, email, role, is_active')
       .eq('tenant_id', tenantId)
       .order('created_at', { ascending: true }),
     supabase
@@ -83,11 +84,11 @@ export default async function TenantDashboard() {
 
   const practiceName = (tenantResult.data?.name as string | null) ?? 'My Practice'
 
-  type RawMember = { id: string; full_name: string | null; email: string | null; role: string; is_active: boolean; practices: { name: string } | { name: string }[] | null }
+  type RawMember = { id: string; full_name: string | null; email: string | null; role: string; is_active: boolean }
   const teamMembers = ((membersResult.data ?? []) as RawMember[]).map(m => ({
     ...m,
     is_active: m.is_active !== false,
-    practices: Array.isArray(m.practices) ? (m.practices[0] ?? null) : m.practices,
+    practices: null,
   }))
   const practices = (practicesResult.data ?? []) as { id: string; name: string }[]
   type PendingInvite = { id: string; email: string; role: string; practice_name: string | null; created_at: string }
