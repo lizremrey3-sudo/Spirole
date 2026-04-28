@@ -86,7 +86,7 @@ export async function forgotPassword(_: ActionState, formData: FormData): Promis
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.spiroletrainer.com'
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${baseUrl}/auth/callback`,
+    redirectTo: `${baseUrl}/auth/callback?type=recovery`,
   })
 
   if (error) return { error: error.message }

@@ -40,8 +40,9 @@ export async function GET(request: NextRequest) {
   console.log('[callback] user:', user ? `id=${user.id} email=${user.email}` : 'null')
   if (!user) return NextResponse.redirect(new URL('/sign-in', request.url))
 
-  const isInvite = type === 'invite' || !!user.user_metadata?.tenant_id
   const isRecovery = type === 'recovery'
+  // Don't treat recovery flows as invites even when the user has tenant_id in metadata
+  const isInvite = !isRecovery && (type === 'invite' || !!user.user_metadata?.tenant_id)
 
   // For invite flows, create the profile row now (before /welcome) so the
   // dashboard can load without needing to know about invite metadata.
