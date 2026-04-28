@@ -10,6 +10,7 @@ const LINK_EXPIRED_MSG = 'This link has expired. Please request a new invite.'
 export default function SignInPage() {
   const [state, action, isPending] = useActionState(signIn, null)
   const [urlError, setUrlError] = useState<string | null>(null)
+  const [urlMessage, setUrlMessage] = useState<string | null>(null)
 
   useEffect(() => {
     console.log('[sign-in] state:', state)
@@ -21,8 +22,14 @@ export default function SignInPage() {
   }, [state])
 
   useEffect(() => {
-    // Handle ?error= query param (PKCE flow errors redirected from /auth/callback)
     const params = new URLSearchParams(window.location.search)
+
+    if (params.get('message') === 'password_set') {
+      setUrlMessage('Password created successfully! Please sign in.')
+      window.history.replaceState(null, '', window.location.pathname)
+      return
+    }
+
     if (params.get('error') === 'link_expired') {
       setUrlError(LINK_EXPIRED_MSG)
       window.history.replaceState(null, '', window.location.pathname)
@@ -64,6 +71,10 @@ export default function SignInPage() {
   return (
     <>
       <h1 className="mb-8 text-2xl font-semibold tracking-tight text-white">Sign in</h1>
+
+      {urlMessage && (
+        <p className="mb-4 rounded-md bg-[#2dd4bf]/10 px-4 py-3 text-sm text-[#2dd4bf]">{urlMessage}</p>
+      )}
 
       {displayError && (
         <p className="mb-4 rounded-md bg-red-500/10 px-4 py-3 text-sm text-red-400">{displayError}</p>

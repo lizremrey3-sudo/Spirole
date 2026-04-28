@@ -35,7 +35,10 @@ export default function WelcomePage() {
       return
     }
 
-    window.location.assign('/dashboard')
+    // Sign out to clear the implicit-flow localStorage session so the user
+    // signs in fresh with their new password and gets proper server-side cookies.
+    await supabase.auth.signOut()
+    window.location.assign('/sign-in?message=password_set')
   }
 
   return (
