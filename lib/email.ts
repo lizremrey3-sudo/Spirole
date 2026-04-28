@@ -1,8 +1,5 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY!)
-const FROM = process.env.RESEND_FROM_EMAIL ?? 'Spirole <noreply@spiroletrainer.com>'
-
 export async function sendInviteEmail({
   to,
   invitedByEmail,
@@ -12,6 +9,8 @@ export async function sendInviteEmail({
   invitedByEmail: string
   joinUrl: string
 }) {
+  const resend = new Resend(process.env.RESEND_API_KEY)
+  const FROM = process.env.RESEND_FROM_EMAIL ?? 'Spirole <noreply@spiroletrainer.com>'
   await resend.emails.send({
     from: FROM,
     to,
