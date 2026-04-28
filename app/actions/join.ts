@@ -5,9 +5,13 @@ import { createAdminClient } from '@/lib/supabase/admin'
 export async function acceptInvite(
   token: string,
   password: string,
+  tosAccepted: boolean,
 ): Promise<{ error?: string; message?: string }> {
   if (!password || password.length < 8) {
     return { error: 'Password must be at least 8 characters.' }
+  }
+  if (!tosAccepted) {
+    return { error: 'You must agree to the Terms of Service and Privacy Policy.' }
   }
 
   const admin = createAdminClient()
@@ -37,14 +41,22 @@ export async function acceptInvite(
     .eq('id', invitation.auth_user_id as string)
     .maybeSingle()
 
+  const tosAcceptedAt = new Date().toISOString()
+
   if (!existingProfile) {
     const { error: profileError } = await admin.from('users').insert({
       id: invitation.auth_user_id as string,
       tenant_id: invitation.tenant_id as string,
       role: invitation.role as string,
       email: invitation.email as string,
+      tos_accepted_at: tosAcceptedAt,
     })
     if (profileError) return { error: profileError.message }
+  } else {
+    await admin
+      .from('users')
+      .update({ tos_accepted_at: tosAcceptedAt })
+      .eq('id', invitation.auth_user_id as string)
   }
 
   await admin

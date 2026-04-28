@@ -9,6 +9,7 @@ const inputCls =
 export default function JoinForm({ token, email }: { token: string; email: string }) {
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
+  const [tosChecked, setTosChecked] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
 
@@ -26,7 +27,7 @@ export default function JoinForm({ token, email }: { token: string; email: strin
     }
 
     setPending(true)
-    const result = await acceptInvite(token, password)
+    const result = await acceptInvite(token, password, tosChecked)
     setPending(false)
 
     if (result.error) {
@@ -71,9 +72,27 @@ export default function JoinForm({ token, email }: { token: string; email: strin
             className={inputCls}
           />
         </div>
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={tosChecked}
+            onChange={e => setTosChecked(e.target.checked)}
+            className="mt-0.5 h-4 w-4 shrink-0 accent-[#2dd4bf]"
+          />
+          <span className="text-sm text-white/60 leading-snug">
+            I agree to the{' '}
+            <a href="/tos" target="_blank" rel="noopener noreferrer" className="text-[#2dd4bf] hover:underline">
+              Terms of Service
+            </a>
+            {' '}and{' '}
+            <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-[#2dd4bf] hover:underline">
+              Privacy Policy
+            </a>
+          </span>
+        </label>
         <button
           type="submit"
-          disabled={pending}
+          disabled={pending || !tosChecked}
           className="mt-2 rounded-md bg-[#2dd4bf] px-4 py-2 text-sm font-medium text-[#0a0e1a] transition-colors hover:bg-[#2dd4bf]/80 disabled:opacity-50"
         >
           {pending ? 'Setting up…' : 'Create account'}
