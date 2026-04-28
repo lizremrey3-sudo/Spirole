@@ -125,7 +125,6 @@ export default function ScenarioForm({
         >
           <option value="sales_roleplay">Sales Roleplay</option>
           <option value="leadership_coaching">Leadership Coaching</option>
-          <option value="interaction">Associate Interaction</option>
         </select>
       </div>
 

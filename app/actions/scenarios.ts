@@ -25,7 +25,8 @@ export async function createScenario(_: ActionState, formData: FormData): Promis
   const title = (formData.get('title') as string).trim()
   const description = (formData.get('description') as string | null)?.trim() || null
   const associate_type = formData.get('associate_type') as string
-  const session_type = (formData.get('session_type') as string | null) || 'sales_roleplay'
+  const rawSessionType = (formData.get('session_type') as string | null) || 'sales_roleplay'
+  const session_type = rawSessionType === 'leadership_coaching' ? 'leadership_coaching' : 'sales_roleplay'
   const personaRaw = formData.get('persona') as string
   const rubricRaw = formData.get('rubric') as string
 

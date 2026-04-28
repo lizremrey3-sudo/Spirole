@@ -30,7 +30,7 @@ const SCENARIO_OPTIONS = [
   { label: 'Technician Scenario',                associate_type: 'technician',   session_type: undefined },
   { label: 'Receptionist Scenario',              associate_type: 'receptionist', session_type: undefined },
   { label: 'Manager Scenario',                   associate_type: 'manager',      session_type: undefined },
-  { label: 'Associate-to-Associate Interaction', associate_type: 'optician',     session_type: 'interaction' },
+  { label: 'Associate-to-Associate Interaction', associate_type: 'optician',     session_type: 'sales_roleplay' },
 ]
 
 const ROLE_LABELS: Record<string, string> = {
