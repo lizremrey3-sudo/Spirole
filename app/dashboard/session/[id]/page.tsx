@@ -7,6 +7,7 @@ import { abandonSession } from '@/app/actions/sessions'
 import ChatInterface from './chat-interface'
 import VocalDeliveryPanel from './vocal-delivery-panel'
 import HumeAutoTrigger from './hume-auto-trigger'
+import CoachingNotesPanel from './coaching-notes-panel'
 
 type PersonaJson = Record<string, unknown>
 type RubricDimension = { name: string; weight: number; description: string }
@@ -44,7 +45,7 @@ export default async function SessionPage({
   if (!user) redirect('/sign-in')
 
   const admin = createAdminClient()
-  const [sessionResult, messagesResult, audioCheck] = await Promise.all([
+  const [sessionResult, messagesResult, audioCheck, profileResult] = await Promise.all([
     supabase
       .from('sessions')
       .select('id, status, score, feedback, started_at, completed_at, scenarios(title, description, persona, rubric)')
@@ -57,7 +58,20 @@ export default async function SessionPage({
       .in('role', ['user', 'assistant'])
       .order('created_at', { ascending: true }),
     admin.storage.from('session-audio').list('', { search: id }),
+    supabase.from('users').select('role').eq('id', user.id).single(),
   ])
+
+  const isManager = ['manager', 'admin'].includes((profileResult.data?.role as string) ?? '')
+  const coachingNote = isManager
+    ? (
+        await supabase
+          .from('coaching_notes')
+          .select('id, notes, updated_at')
+          .eq('session_id', id)
+          .eq('manager_id', user.id)
+          .maybeSingle()
+      ).data
+    : null
 
   if (sessionResult.error || !sessionResult.data) redirect('/dashboard')
 
@@ -152,6 +166,8 @@ export default async function SessionPage({
           sessionId={id}
           vocalDelivery={vocalDelivery}
           hasAudio={hasAudio}
+          isManager={isManager}
+          coachingNote={coachingNote as { id: string; notes: string; updated_at: string } | null}
         />
       ) : (
         <ChatInterface
@@ -174,6 +190,8 @@ function ResultsView({
   sessionId,
   vocalDelivery,
   hasAudio,
+  isManager,
+  coachingNote,
 }: {
   score: number | null
   evaluation: EvalResult | null
@@ -183,6 +201,8 @@ function ResultsView({
   sessionId: string
   vocalDelivery: VocalDeliveryScores | null
   hasAudio: boolean
+  isManager: boolean
+  coachingNote: { id: string; notes: string; updated_at: string } | null
 }) {
   const dimensions = evaluation?.rubric_dimensions ?? rubric.dimensions ?? []
 
@@ -285,6 +305,10 @@ function ResultsView({
                 </div>
               )}
             </div>
+          )}
+
+          {isManager && (
+            <CoachingNotesPanel sessionId={sessionId} existingNote={coachingNote} />
           )}
 
           <Link

@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import CommitmentForm from './commitment-form'
 import CommitmentsHistory from './commitments-history'
+import PerformanceMetrics from './performance-metrics'
 import DashboardNav from '../dashboard-nav'
 
 type RubricDimension = { name: string; weight: number; description: string }
@@ -32,7 +33,7 @@ export default async function ThinkPage() {
   const { data: subscription } = await supabase.from('subscriptions').select('status').maybeSingle()
   if (!subscription || subscription.status === 'inactive') redirect('/pricing')
 
-  const [{ data: rawSessions }, { data: rawCommitments }] = await Promise.all([
+  const [{ data: rawSessions }, { data: rawCommitments }, { data: rawMetrics }] = await Promise.all([
     supabase
       .from('sessions')
       .select('feedback')
@@ -43,6 +44,10 @@ export default async function ThinkPage() {
       .select('id, prompt, response, created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false }),
+    supabase
+      .from('performance_metrics')
+      .select('week_number, metric_name, metric_value')
+      .eq('user_id', user.id),
   ])
 
   // Aggregate dimension scores across all completed sessions
@@ -70,6 +75,9 @@ export default async function ThinkPage() {
   const commitments = (rawCommitments ?? []) as {
     id: string; prompt: string; response: string; created_at: string
   }[]
+  const metrics = (rawMetrics ?? []) as {
+    week_number: number; metric_name: string; metric_value: number
+  }[]
 
   return (
     <div className="flex min-h-full flex-col bg-[#0a0e1a]">
@@ -89,6 +97,7 @@ export default async function ThinkPage() {
       </div>
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
+        <div className="flex flex-col gap-6">
         <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
 
           {/* Left column */}
@@ -162,6 +171,10 @@ export default async function ThinkPage() {
               </div>
             )}
           </div>
+        </div>
+
+        {/* Performance Metrics */}
+        <PerformanceMetrics existing={metrics} />
         </div>
       </main>
     </div>
