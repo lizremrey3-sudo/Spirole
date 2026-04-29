@@ -16,6 +16,13 @@ type RubricJson = {
 
 type PersonaJson = Record<string, unknown>
 
+type CoachingSummary = {
+  main_issues: string[]
+  what_tried: string[]
+  next_steps: string[]
+  overall_themes: string
+}
+
 const LEADERSHIP_RUBRIC: RubricDimension[] = [
   { name: 'questioning_quality',  weight: 20, description: 'Quality and depth of questions asked to draw out insight from the coachee' },
   { name: 'psychological_safety', weight: 20, description: 'Ability to create a safe environment for honest conversation and vulnerability' },
@@ -23,6 +30,15 @@ const LEADERSHIP_RUBRIC: RubricDimension[] = [
   { name: 'active_listening',     weight: 20, description: 'Evidence of deep listening, reflection, and building on what was said' },
   { name: 'empowerment',          weight: 20, description: 'Degree to which the coach helped the coachee find their own solutions' },
 ]
+
+function buildCoachingPrompt(transcript: string): string {
+  return `This is a leadership coaching conversation. Summarize it concisely with these sections: Main Issues Discussed (bullet points), What Has Been Tried (bullet points), Possible Next Steps (bullet points), Overall Themes (2-3 sentences). Return as JSON with keys: main_issues, what_tried, next_steps, overall_themes.
+
+TRANSCRIPT:
+${transcript}
+
+Return ONLY the JSON object with no additional text or markdown.`
+}
 
 function buildEvalPrompt(
   scenarioTitle: string,
@@ -180,6 +196,39 @@ export async function POST(
   const transcript = allMessages
     .map(m => `[${m.role === 'user' ? practitionerLabel : personaName}]: ${m.content}`)
     .join('\n\n')
+
+  if (sessionType === 'leadership_coaching') {
+    const coachingPrompt = buildCoachingPrompt(transcript)
+    const summaryResponse = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1024,
+      messages: [{ role: 'user', content: coachingPrompt }],
+    })
+
+    const rawSummaryText = summaryResponse.content[0].type === 'text' ? summaryResponse.content[0].text : ''
+
+    let summary: CoachingSummary
+    try {
+      const jsonMatch = rawSummaryText.match(/\{[\s\S]*\}/)
+      summary = JSON.parse(jsonMatch ? jsonMatch[0] : rawSummaryText) as CoachingSummary
+    } catch {
+      return Response.json({ error: 'Failed to parse coaching summary' }, { status: 500 })
+    }
+
+    const { error: updateError } = await supabase
+      .from('sessions')
+      .update({
+        status: 'completed',
+        score: null,
+        feedback: JSON.stringify(summary),
+        completed_at: new Date().toISOString(),
+      })
+      .eq('id', sessionId)
+
+    if (updateError) return Response.json({ error: updateError.message }, { status: 500 })
+
+    return Response.json({ summary, overallScore: null })
+  }
 
   const evalPrompt = buildEvalPrompt(
     scenarioTitle, scenarioDesc, persona, effectiveDimensions, transcript, sessionType,

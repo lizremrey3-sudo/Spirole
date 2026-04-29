@@ -29,6 +29,13 @@ type EvalResult = {
   rubric_dimensions?: RubricDimension[]
 }
 
+type CoachingSummary = {
+  main_issues: string[]
+  what_tried: string[]
+  next_steps: string[]
+  overall_themes: string
+}
+
 export default async function SessionPage({
   params,
   searchParams,
@@ -48,7 +55,7 @@ export default async function SessionPage({
   const [sessionResult, messagesResult, audioCheck, profileResult] = await Promise.all([
     supabase
       .from('sessions')
-      .select('id, status, score, feedback, started_at, completed_at, scenarios(title, description, persona, rubric)')
+      .select('id, status, score, feedback, started_at, completed_at, scenarios(title, description, persona, rubric, associate_type)')
       .eq('id', id)
       .single(),
     supabase
@@ -83,17 +90,25 @@ export default async function SessionPage({
   const persona = (scenarioRaw?.persona ?? {}) as PersonaJson
   const rubric = (scenarioRaw?.rubric ?? {}) as RubricJson
   const personaName = typeof persona.name === 'string' ? persona.name : 'AI'
+  const associateType = (scenarioRaw?.associate_type as string | undefined) ?? 'optician'
+  const isCoachingSession = associateType === 'manager'
   const userTurns = messages.filter(m => m.role === 'user').length
 
   const isCompleted = session.status === 'completed'
 
   let evaluation: EvalResult | null = null
+  let coachingSummary: CoachingSummary | null = null
   let vocalDelivery: VocalDeliveryScores | null = null
   if (isCompleted && session.feedback) {
     try {
-      const parsed = JSON.parse(session.feedback as string) as EvalResult & { vocal_delivery?: VocalDeliveryScores }
-      evaluation = parsed
-      vocalDelivery = parsed.vocal_delivery ?? null
+      const parsed = JSON.parse(session.feedback as string)
+      if (isCoachingSession) {
+        coachingSummary = parsed as CoachingSummary
+      } else {
+        const evalParsed = parsed as EvalResult & { vocal_delivery?: VocalDeliveryScores }
+        evaluation = evalParsed
+        vocalDelivery = evalParsed.vocal_delivery ?? null
+      }
     } catch {
       evaluation = null
     }
@@ -160,6 +175,8 @@ export default async function SessionPage({
         <ResultsView
           score={session.score as number | null}
           evaluation={evaluation}
+          coachingSummary={coachingSummary}
+          isCoachingSession={isCoachingSession}
           rubric={rubric}
           personaName={personaName}
           messages={messages}
@@ -184,6 +201,8 @@ export default async function SessionPage({
 function ResultsView({
   score,
   evaluation,
+  coachingSummary,
+  isCoachingSession,
   rubric,
   personaName,
   messages,
@@ -195,6 +214,8 @@ function ResultsView({
 }: {
   score: number | null
   evaluation: EvalResult | null
+  coachingSummary: CoachingSummary | null
+  isCoachingSession: boolean
   rubric: RubricJson
   personaName: string
   messages: { id: string; role: 'user' | 'assistant'; content: string; created_at: string }[]
@@ -226,85 +247,153 @@ function ResultsView({
       {/* Results panel */}
       <div className="flex flex-1 flex-col overflow-y-auto px-6 py-8">
         <div className="mx-auto w-full max-w-2xl">
-          {/* Overall score */}
-          <div className="mb-8 rounded-2xl border border-white/10 bg-[#111827] p-6 shadow-sm">
-            <h2 className="mb-1 text-sm font-medium text-white/50">Overall Score</h2>
-            <p className={`text-5xl font-bold ${displayScore !== null ? overallColor(displayScore) : 'text-white'}`}>
-              {displayScore !== null ? displayScore : '—'}
-              <span className="ml-1 text-2xl font-medium text-white/40">/ 100</span>
-            </p>
-            {evaluation?.overall_feedback && (
-              <p className="mt-4 text-sm leading-relaxed text-white/70">{evaluation.overall_feedback}</p>
-            )}
-          </div>
 
-          {/* Dimension scores */}
-          {evaluation && dimensions.length > 0 && (
-            <div className="mb-8">
-              <h2 className="mb-3 text-sm font-semibold text-[#2dd4bf]">Dimension Scores</h2>
-              <div className="flex flex-col gap-3">
-                {dimensions.map(dim => {
-                  const entry = evaluation.scores[dim.name]
-                  const dimScore = entry?.score ?? null
-                  return (
-                    <div key={dim.name} className="rounded-xl border border-white/10 bg-[#111827] p-4">
-                      <div className="flex items-center justify-between gap-4">
-                        <div>
-                          <p className="text-sm font-semibold text-white">{dim.name}</p>
-                          <p className="mt-0.5 text-xs text-white/50">{dim.description}</p>
-                        </div>
-                        {dimScore !== null && (
-                          <span className={`shrink-0 rounded-lg px-3 py-1 text-sm font-bold ${scoreColor(dimScore)}`}>
-                            {dimScore}/10
-                          </span>
-                        )}
-                      </div>
-                      {entry?.rationale && (
-                        <p className="mt-3 border-t border-white/[0.06] pt-3 text-sm leading-relaxed text-white/60">
-                          {entry.rationale}
-                        </p>
-                      )}
-                    </div>
-                  )
-                })}
+          {isCoachingSession && coachingSummary ? (
+            <>
+              {/* Coaching session header */}
+              <div className="mb-8 rounded-2xl border border-[#2dd4bf]/20 bg-[#111827] p-6 shadow-sm">
+                <span className="mb-3 inline-block rounded-full bg-[#2dd4bf]/10 px-3 py-1 text-xs font-semibold text-[#2dd4bf]">
+                  Coaching Session
+                </span>
+                <h2 className="text-lg font-semibold text-white">Session Summary</h2>
               </div>
-            </div>
-          )}
 
-          {/* Vocal Delivery */}
-          {vocalDelivery && <VocalDeliveryPanel scores={vocalDelivery} />}
-          {!vocalDelivery && hasAudio && <HumeAutoTrigger sessionId={sessionId} />}
-
-          {/* Strengths & Improvements */}
-          {evaluation && (
-            <div className="mb-8 grid grid-cols-2 gap-4">
-              {evaluation.strengths?.length > 0 && (
-                <div className="rounded-xl border border-green-500/20 bg-green-500/10 p-4">
-                  <h3 className="mb-2 text-sm font-semibold text-green-400">Strengths</h3>
-                  <ul className="flex flex-col gap-1.5">
-                    {evaluation.strengths.map((s, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm text-green-300/80">
-                        <span className="mt-0.5 shrink-0">✓</span>
-                        <span>{s}</span>
+              {/* Main Issues */}
+              {coachingSummary.main_issues?.length > 0 && (
+                <div className="mb-5 rounded-xl border border-white/10 bg-[#111827] p-5">
+                  <h3 className="mb-3 text-sm font-semibold text-[#2dd4bf]">Main Issues Discussed</h3>
+                  <ul className="flex flex-col gap-2">
+                    {coachingSummary.main_issues.map((item, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-white/70">
+                        <span className="mt-0.5 shrink-0 text-[#2dd4bf]">•</span>
+                        <span>{item}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
               )}
-              {evaluation.improvements?.length > 0 && (
-                <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
-                  <h3 className="mb-2 text-sm font-semibold text-amber-400">Areas to Improve</h3>
-                  <ul className="flex flex-col gap-1.5">
-                    {evaluation.improvements.map((s, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm text-amber-300/80">
-                        <span className="mt-0.5 shrink-0">→</span>
-                        <span>{s}</span>
+
+              {/* What Has Been Tried */}
+              {coachingSummary.what_tried?.length > 0 && (
+                <div className="mb-5 rounded-xl border border-white/10 bg-[#111827] p-5">
+                  <h3 className="mb-3 text-sm font-semibold text-[#2dd4bf]">What Has Been Tried</h3>
+                  <ul className="flex flex-col gap-2">
+                    {coachingSummary.what_tried.map((item, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-white/70">
+                        <span className="mt-0.5 shrink-0 text-[#2dd4bf]">•</span>
+                        <span>{item}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
               )}
-            </div>
+
+              {/* Possible Next Steps */}
+              {coachingSummary.next_steps?.length > 0 && (
+                <div className="mb-5 rounded-xl border border-white/10 bg-[#111827] p-5">
+                  <h3 className="mb-3 text-sm font-semibold text-[#2dd4bf]">Possible Next Steps</h3>
+                  <ul className="flex flex-col gap-2">
+                    {coachingSummary.next_steps.map((item, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-white/70">
+                        <span className="mt-0.5 shrink-0 text-[#2dd4bf]">•</span>
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Overall Themes */}
+              {coachingSummary.overall_themes && (
+                <div className="mb-8 rounded-xl border border-white/10 bg-[#111827] p-5">
+                  <h3 className="mb-2 text-sm font-semibold text-[#2dd4bf]">Overall Themes</h3>
+                  <p className="text-sm leading-relaxed text-white/70">{coachingSummary.overall_themes}</p>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              {/* Overall score */}
+              <div className="mb-8 rounded-2xl border border-white/10 bg-[#111827] p-6 shadow-sm">
+                <h2 className="mb-1 text-sm font-medium text-white/50">Overall Score</h2>
+                <p className={`text-5xl font-bold ${displayScore !== null ? overallColor(displayScore) : 'text-white'}`}>
+                  {displayScore !== null ? displayScore : '—'}
+                  <span className="ml-1 text-2xl font-medium text-white/40">/ 100</span>
+                </p>
+                {evaluation?.overall_feedback && (
+                  <p className="mt-4 text-sm leading-relaxed text-white/70">{evaluation.overall_feedback}</p>
+                )}
+              </div>
+
+              {/* Dimension scores */}
+              {evaluation && dimensions.length > 0 && (
+                <div className="mb-8">
+                  <h2 className="mb-3 text-sm font-semibold text-[#2dd4bf]">Dimension Scores</h2>
+                  <div className="flex flex-col gap-3">
+                    {dimensions.map(dim => {
+                      const entry = evaluation.scores[dim.name]
+                      const dimScore = entry?.score ?? null
+                      return (
+                        <div key={dim.name} className="rounded-xl border border-white/10 bg-[#111827] p-4">
+                          <div className="flex items-center justify-between gap-4">
+                            <div>
+                              <p className="text-sm font-semibold text-white">{dim.name}</p>
+                              <p className="mt-0.5 text-xs text-white/50">{dim.description}</p>
+                            </div>
+                            {dimScore !== null && (
+                              <span className={`shrink-0 rounded-lg px-3 py-1 text-sm font-bold ${scoreColor(dimScore)}`}>
+                                {dimScore}/10
+                              </span>
+                            )}
+                          </div>
+                          {entry?.rationale && (
+                            <p className="mt-3 border-t border-white/[0.06] pt-3 text-sm leading-relaxed text-white/60">
+                              {entry.rationale}
+                            </p>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Vocal Delivery */}
+              {vocalDelivery && <VocalDeliveryPanel scores={vocalDelivery} />}
+              {!vocalDelivery && hasAudio && <HumeAutoTrigger sessionId={sessionId} />}
+
+              {/* Strengths & Improvements */}
+              {evaluation && (
+                <div className="mb-8 grid grid-cols-2 gap-4">
+                  {evaluation.strengths?.length > 0 && (
+                    <div className="rounded-xl border border-green-500/20 bg-green-500/10 p-4">
+                      <h3 className="mb-2 text-sm font-semibold text-green-400">Strengths</h3>
+                      <ul className="flex flex-col gap-1.5">
+                        {evaluation.strengths.map((s, i) => (
+                          <li key={i} className="flex items-start gap-2 text-sm text-green-300/80">
+                            <span className="mt-0.5 shrink-0">✓</span>
+                            <span>{s}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {evaluation.improvements?.length > 0 && (
+                    <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
+                      <h3 className="mb-2 text-sm font-semibold text-amber-400">Areas to Improve</h3>
+                      <ul className="flex flex-col gap-1.5">
+                        {evaluation.improvements.map((s, i) => (
+                          <li key={i} className="flex items-start gap-2 text-sm text-amber-300/80">
+                            <span className="mt-0.5 shrink-0">→</span>
+                            <span>{s}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
           )}
 
           {isManager && (

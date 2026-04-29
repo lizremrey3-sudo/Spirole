@@ -42,7 +42,7 @@ export default async function AssociatePage() {
   const [{ data: raw }, { data: scenarios }] = await Promise.all([
     supabase
       .from('sessions')
-      .select('id, score, feedback, completed_at, scenarios(title)')
+      .select('id, score, feedback, completed_at, scenarios(title, associate_type)')
       .eq('user_id', user.id)
       .eq('status', 'completed')
       .order('completed_at', { ascending: true }),
@@ -54,18 +54,20 @@ export default async function AssociatePage() {
 
   const sessions = (raw ?? []).map(s => {
     const scenarioRaw = Array.isArray(s.scenarios) ? s.scenarios[0] : s.scenarios
-    const title = (scenarioRaw as { title?: string } | null)?.title ?? 'Session'
+    const title = (scenarioRaw as { title?: string; associate_type?: string } | null)?.title ?? 'Session'
+    const associateType = (scenarioRaw as { title?: string; associate_type?: string } | null)?.associate_type ?? ''
+    const isCoaching = associateType === 'manager'
     const num = s.score != null ? Number(s.score) : null
     const score = num !== null && isFinite(num) ? Math.round(num) : null
     let evaluation: EvalResult | null = null
     if (s.feedback) {
       try { evaluation = JSON.parse(s.feedback as string) as EvalResult } catch {}
     }
-    return { id: s.id as string, score, completedAt: s.completed_at as string, title, evaluation }
+    return { id: s.id as string, score, completedAt: s.completed_at as string, title, evaluation, isCoaching }
   })
 
   const chartData = sessions
-    .filter(s => s.score !== null)
+    .filter(s => s.score !== null && !s.isCoaching)
     .map(s => ({ score: s.score as number, date: s.completedAt, label: s.title }))
 
   const displaySessions = [...sessions].reverse()
@@ -117,7 +119,11 @@ export default async function AssociatePage() {
                     })}
                   </p>
                 </div>
-                {session.score !== null ? (
+                {session.isCoaching ? (
+                  <span className="shrink-0 rounded-lg bg-[#2dd4bf]/10 px-3 py-1.5 text-xs font-semibold text-[#2dd4bf]">
+                    Coaching Session
+                  </span>
+                ) : session.score !== null ? (
                   <span className={`shrink-0 rounded-lg px-3 py-1.5 text-sm font-bold ${scoreColor(session.score)}`}>
                     {session.score}
                     <span className="ml-0.5 text-xs font-normal opacity-60">/100</span>
