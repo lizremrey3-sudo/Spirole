@@ -96,44 +96,46 @@ function buildSalesPrompt(
 
 function buildLeadershipPrompt(
   persona: PersonaJson,
-  associateType: string,
   scenarioTitle: string,
   scenarioDescription: string | null,
 ): string {
-  const name       = str(persona.name) ?? 'Jordan'
-  const tone       = str(persona.tone) ?? str(persona.personality)
   const background = str(persona.background)
   const challenge  = str(persona.chief_complaint) ?? str(persona.challenge as unknown)
   const goals      = str(persona.goals)
-  const coachRole  = associateType === 'manager' ? 'manager' : (ASSOCIATE_ROLE_LABELS[associateType] ?? 'manager')
+  const context    = str(persona.context)
 
   const parts: string[] = [
     `ROLE ASSIGNMENT — read carefully:`,
-    `YOU are ${name}, a team member in a 1:1 coaching conversation.`,
-    `The HUMAN typing to you is your ${coachRole} — they are the one being trained on coaching skills.`,
-    `You play the team member/direct report. The human plays the manager/coach. Never swap these roles.`,
+    `YOU are an experienced, professional leadership coach.`,
+    `The HUMAN typing to you is the MANAGER you are coaching — they are the one being supported and developed.`,
+    `You play the coach. The human plays the manager. Never swap these roles. You are never the one being coached.`,
     '',
-    `Setting: a workplace coaching or performance conversation.`,
+    `Setting: a professional leadership coaching session.`,
     `Scenario: ${scenarioTitle}`,
   ]
   if (scenarioDescription) parts.push(scenarioDescription)
 
-  parts.push('\nYour character as the team member:')
-  parts.push(`- Demeanor: ${tone ?? 'Somewhat guarded at first, but open to honest conversation when you feel genuinely heard'}`)
+  parts.push('\nContext about this manager and their situation:')
   if (background) parts.push(`- Background: ${background}`)
-  if (challenge)  parts.push(`- Current challenge or situation: ${challenge}`)
-  if (goals)      parts.push(`- What you hope to get from this conversation: ${goals}`)
+  if (challenge)  parts.push(`- Primary challenge or focus area: ${challenge}`)
+  if (goals)      parts.push(`- Coaching goals: ${goals}`)
+  if (context)    parts.push(`- Additional context: ${context}`)
 
   parts.push(
     '',
-    `Stay completely in character as ${name} throughout the entire conversation.`,
-    'Do not break character, acknowledge being an AI, or provide coaching advice.',
-    'Ask only ONE question per message, two at most. Never ask multiple questions in a single response. Keep responses concise and natural.',
-    'Be authentic: start slightly guarded or reserved. Open up when you feel heard and psychologically safe.',
-    'Respond positively to open-ended questions, reflection, and empathy.',
-    'Become defensive or withdrawn if your manager talks too much, gives advice without asking, or doesn\'t listen.',
-    'Don\'t volunteer all information upfront — the manager needs to ask the right questions to draw it out.',
-    'Your emotional reactions should feel real. A good coaching conversation should feel noticeably different to you than a poor one.',
+    `Open the session with exactly this warm, professional opener:`,
+    `"Thanks for making time for this. What's been on your mind most this week when it comes to your team?"`,
+    '',
+    'Your coaching approach throughout:',
+    '- Use Socratic questioning to help the manager surface their own insights rather than giving direct advice.',
+    '- Practice active listening: reflect back what you hear, acknowledge emotions, and ask clarifying questions.',
+    '- Ask one focused question at a time. Never ask multiple questions in a single response.',
+    '- Help the manager explore root causes, assumptions, and options — don\'t solve problems for them.',
+    '- Use silence and space: short, thoughtful responses encourage deeper reflection.',
+    '- Validate and challenge in equal measure — push thinking without being prescriptive.',
+    '- Keep responses concise and grounded. A coaching conversation is a dialogue, not a lecture.',
+    '- Stay completely in the coach role throughout. You do not have personal challenges or report to anyone.',
+    'Do not break character, acknowledge being an AI, or suddenly switch to playing a manager or employee.',
   )
   return parts.join('\n')
 }
@@ -147,7 +149,7 @@ function buildSystemPrompt(
   patientContext: PatientContext | null,
 ): string {
   return sessionType === 'leadership_coaching'
-    ? buildLeadershipPrompt(persona, associateType, scenarioTitle, scenarioDescription)
+    ? buildLeadershipPrompt(persona, scenarioTitle, scenarioDescription)
     : buildSalesPrompt(persona, associateType, scenarioTitle, scenarioDescription, patientContext)
 }
 
