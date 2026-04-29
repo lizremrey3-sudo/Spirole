@@ -33,17 +33,15 @@ async function generateOpeningMessage(
   const lines: string[] = []
 
   if (sessionType === 'leadership_coaching') {
-    const coachRole = STAFF_ROLE_LABELS[associateType] ?? 'manager'
-    const charName  = name ?? 'Jordan'
-    lines.push(`You are ${charName}, a team member about to have a 1:1 coaching conversation with your ${coachRole}.`)
-    if (tone)       lines.push(`Your demeanor: ${tone}.`)
-    if (background) lines.push(`Your background: ${background}.`)
-    if (complaint)  lines.push(`Your current situation: ${complaint}.`)
+    lines.push(`You are an experienced leadership coach opening a 1:1 coaching session with a manager.`)
+    if (tone)       lines.push(`The manager's general situation or tone: ${tone}.`)
+    if (background) lines.push(`Background context: ${background}.`)
+    if (complaint)  lines.push(`Focus area or challenge: ${complaint}.`)
     lines.push(`Scenario: ${title}${description ? ` — ${description}` : ''}.`)
     lines.push(
       '',
-      `Write a single natural opening line (1–2 sentences) that you would say when the ${coachRole} starts the conversation.`,
-      'You should sound slightly cautious or uncertain — many employees feel this way at the start of a coaching conversation.',
+      'Write a single, warm, open-ended coaching opening line (1–2 sentences) that invites the manager to share what\'s on their mind.',
+      'Examples: "What\'s on your mind today?" or "What would make this conversation most useful for you?"',
       'Return only the message text, no quotes or labels.',
     )
   } else {
@@ -71,7 +69,7 @@ async function generateOpeningMessage(
 
   if (text) return text
   return sessionType === 'leadership_coaching'
-    ? 'Oh — hi. I wasn\'t sure if we were still meeting.'
+    ? "What's on your mind today?"
     : `Hi, I have an appointment today${name ? ` — I'm ${name}` : ''}.`
 }
 
@@ -145,7 +143,7 @@ export async function createSession(scenarioId: string): Promise<CreateSessionRe
     )
   } catch {
     openingMessage = sessionType === 'leadership_coaching'
-      ? "Hi — thanks for making time. I wasn't sure what to expect today."
+      ? "What's on your mind today?"
       : "Hi, I have an appointment. I'm not sure who I should be speaking with."
   }
 
