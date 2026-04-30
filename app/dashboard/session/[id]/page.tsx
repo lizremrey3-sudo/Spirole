@@ -311,7 +311,7 @@ function ResultsView({
                 </div>
               )}
             </>
-          ) : (
+          ) : isManager ? (
             <>
               {/* Overall score */}
               <div className="mb-8 rounded-2xl border border-white/10 bg-[#111827] p-6 shadow-sm">
@@ -391,6 +391,54 @@ function ResultsView({
                       </ul>
                     </div>
                   )}
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              {/* Associate view: qualitative feedback only, no scores */}
+              {evaluation?.overall_feedback && (
+                <div className="mb-6 rounded-2xl border border-white/10 bg-[#111827] p-6 shadow-sm">
+                  <h2 className="mb-2 text-sm font-semibold text-[#2dd4bf]">Coaching Summary</h2>
+                  <p className="text-sm leading-relaxed text-white/70">{evaluation.overall_feedback}</p>
+                </div>
+              )}
+
+              {evaluation && (
+                <div className="mb-6 grid grid-cols-2 gap-4">
+                  {evaluation.strengths?.length > 0 && (
+                    <div className="rounded-xl border border-green-500/20 bg-green-500/10 p-4">
+                      <h3 className="mb-2 text-sm font-semibold text-green-400">Strengths</h3>
+                      <ul className="flex flex-col gap-1.5">
+                        {evaluation.strengths.map((s, i) => (
+                          <li key={i} className="flex items-start gap-2 text-sm text-green-300/80">
+                            <span className="mt-0.5 shrink-0">✓</span>
+                            <span>{s}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {evaluation.improvements?.length > 0 && (
+                    <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
+                      <h3 className="mb-2 text-sm font-semibold text-amber-400">Areas to Improve</h3>
+                      <ul className="flex flex-col gap-1.5">
+                        {evaluation.improvements.map((s, i) => (
+                          <li key={i} className="flex items-start gap-2 text-sm text-amber-300/80">
+                            <span className="mt-0.5 shrink-0">→</span>
+                            <span>{s}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {evaluation?.improvements?.[0] && (
+                <div className="mb-6 rounded-xl border border-[#2dd4bf]/20 bg-[#2dd4bf]/5 p-5">
+                  <h3 className="mb-2 text-sm font-semibold text-[#2dd4bf]">Next Skill to Practice</h3>
+                  <p className="text-sm leading-relaxed text-white/80">{evaluation.improvements[0]}</p>
                 </div>
               )}
             </>

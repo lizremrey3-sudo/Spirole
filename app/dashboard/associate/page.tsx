@@ -66,6 +66,8 @@ export default async function AssociatePage() {
     return { id: s.id as string, score, completedAt: s.completed_at as string, title, evaluation, isCoaching }
   })
 
+  const isRep = !['manager', 'admin'].includes((profile?.role as string) ?? '')
+
   const chartData = sessions
     .filter(s => s.score !== null && !s.isCoaching)
     .map(s => ({ score: s.score as number, date: s.completedAt, label: s.title }))
@@ -93,7 +95,7 @@ export default async function AssociatePage() {
           </h2>
         </div>
 
-        {chartData.length > 0 && (
+        {chartData.length > 0 && !isRep && (
           <div className="mb-6">
             <ScoreChart data={chartData} />
           </div>
@@ -123,6 +125,8 @@ export default async function AssociatePage() {
                   <span className="shrink-0 rounded-lg bg-[#2dd4bf]/10 px-3 py-1.5 text-xs font-semibold text-[#2dd4bf]">
                     Coaching Session
                   </span>
+                ) : isRep ? (
+                  <span className="shrink-0 text-xs text-white/40">View feedback →</span>
                 ) : session.score !== null ? (
                   <span className={`shrink-0 rounded-lg px-3 py-1.5 text-sm font-bold ${scoreColor(session.score)}`}>
                     {session.score}
