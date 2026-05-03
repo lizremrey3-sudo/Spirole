@@ -48,13 +48,13 @@ export default function LandingPage() {
 
           {/* Label */}
           <p className="mb-5 text-xs font-semibold uppercase tracking-[0.25em] text-teal-400">
-            For Optical Teams
+            For Teams
           </p>
 
           {/* Headline */}
           <h1 className="mb-6 text-5xl font-bold leading-[1.08] tracking-tight text-white sm:text-6xl lg:text-[4.5rem]">
             Communication Training<br className="hidden sm:block" />{' '}
-            for Optical Teams
+            for Teams
           </h1>
 
           {/* Subheading */}
