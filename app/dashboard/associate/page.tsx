@@ -75,10 +75,10 @@ export default async function AssociatePage() {
   const displaySessions = [...sessions].reverse()
 
   return (
-    <div className="flex min-h-full flex-col bg-[#0a0e1a]">
+    <div className="flex min-h-screen bg-[#0a0e1a]">
       <DashboardNav email={user.email ?? ''} role={profile?.role ?? undefined} />
 
-      <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-10">
+      <main className="mx-auto w-full max-w-4xl flex-1 min-w-0 px-6 py-10">
 
         <ScenariosPanel scenarios={scenarios ?? []} />
 

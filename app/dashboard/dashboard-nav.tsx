@@ -17,46 +17,50 @@ export default function DashboardNav({
 
   const NAV = [
     { href: dashboardHref, label: 'Dashboard' },
-    { href: '/dashboard/associate', label: 'My Sessions' },
-    { href: '/dashboard/think', label: 'Think It Through' },
-    ...(role === 'admin' ? [{ href: '/dashboard/tenant', label: 'Admin Panel' }] : []),
+    { href: '/dashboard/associate', label: 'Sessions' },
+    { href: '/dashboard/think', label: 'Reflect' },
+    ...(role === 'admin' ? [{ href: '/dashboard/tenant', label: 'Admin' }] : []),
   ]
 
   const isActive = (href: string) =>
-    href === '/dashboard' ? pathname === '/dashboard' : pathname.startsWith(href)
+    href === '/dashboard'
+      ? pathname === '/dashboard'
+      : pathname === href || pathname.startsWith(href + '/')
 
   return (
-    <header className="border-b border-white/10 bg-[#111827]">
-      <div className="flex items-center justify-between px-6 py-3">
+    <aside className="sticky top-0 flex h-screen w-[210px] shrink-0 flex-col border-r border-white/10 bg-[#111827]">
+      <div className="px-5 py-5">
         <span className="text-sm font-semibold tracking-tight text-white">Spirole</span>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-white/50">{email}</span>
-          <form action={signOut}>
-            <button
-              type="submit"
-              className="rounded-md border border-white/15 px-3 py-1.5 text-sm font-medium text-white/70 transition-colors hover:bg-white/10"
-            >
-              Sign out
-            </button>
-          </form>
-        </div>
       </div>
-      <nav className="flex gap-1 border-t border-white/[0.06] px-6">
+
+      <nav className="flex flex-1 flex-col gap-0.5 px-3">
         {NAV.map(({ href, label }) => (
           <Link
             key={href}
             href={href}
             className={[
-              '-mb-px border-b-2 px-3 py-2.5 text-sm font-medium transition-colors',
+              'rounded-md px-3 py-2 text-sm font-medium transition-colors',
               isActive(href)
-                ? 'border-[#2dd4bf] text-[#2dd4bf]'
-                : 'border-transparent text-white/40 hover:text-white/70',
+                ? 'bg-[#2dd4bf]/10 text-[#2dd4bf]'
+                : 'text-white/50 hover:bg-white/5 hover:text-white/80',
             ].join(' ')}
           >
             {label}
           </Link>
         ))}
       </nav>
-    </header>
+
+      <div className="border-t border-white/10 px-5 py-4">
+        <p className="mb-2 truncate text-xs text-white/40">{email}</p>
+        <form action={signOut}>
+          <button
+            type="submit"
+            className="w-full rounded-md border border-white/15 px-3 py-1.5 text-sm font-medium text-white/70 transition-colors hover:bg-white/10"
+          >
+            Sign out
+          </button>
+        </form>
+      </div>
+    </aside>
   )
 }

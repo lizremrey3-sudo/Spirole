@@ -30,6 +30,12 @@ export default async function ThinkPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/sign-in')
 
+  const { data: profile } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
   const { data: subscription } = await supabase.from('subscriptions').select('status').maybeSingle()
   if (!subscription || subscription.status === 'inactive') redirect('/pricing')
 
@@ -80,9 +86,10 @@ export default async function ThinkPage() {
   }[]
 
   return (
-    <div className="flex min-h-full flex-col bg-[#0a0e1a]">
-      <DashboardNav email={user.email ?? ''} />
+    <div className="flex min-h-screen bg-[#0a0e1a]">
+      <DashboardNav email={user.email ?? ''} role={profile?.role ?? undefined} />
 
+      <div className="flex flex-1 flex-col min-w-0">
       {/* Hero */}
       <div className="relative h-52 overflow-hidden">
         <div
@@ -96,7 +103,7 @@ export default async function ThinkPage() {
         </div>
       </div>
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
+      <main className="mx-auto w-full max-w-6xl flex-1 min-w-0 px-6 py-10">
         <div className="flex flex-col gap-6">
         <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
 
@@ -177,6 +184,7 @@ export default async function ThinkPage() {
         <PerformanceMetrics existing={metrics} />
         </div>
       </main>
+      </div>
     </div>
   )
 }

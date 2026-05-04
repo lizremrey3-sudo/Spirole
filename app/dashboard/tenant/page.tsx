@@ -137,10 +137,10 @@ export default async function TenantDashboard() {
   const weekLabels = bins.map(b => b.label)
 
   return (
-    <div className="flex min-h-full flex-col bg-[#0a0e1a]">
+    <div className="flex min-h-screen bg-[#0a0e1a]">
       <DashboardNav email={user.email ?? ''} dashboardHref="/dashboard/tenant" role="admin" />
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
+      <main className="mx-auto w-full max-w-6xl flex-1 min-w-0 px-6 py-10">
 
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div>
