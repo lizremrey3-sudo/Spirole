@@ -21,6 +21,13 @@ type SessionRow = {
   scenarios: { associate_type: string } | { associate_type: string }[] | null
 }
 
+type ExternalMetric = {
+  source: string
+  metric_name: string
+  metric_value: number
+  recorded_date: string
+}
+
 function getAssociateType(s: SessionRow): string {
   const sc = Array.isArray(s.scenarios) ? s.scenarios[0] : s.scenarios
   return (sc as { associate_type?: string } | null)?.associate_type ?? 'unknown'
@@ -58,6 +65,17 @@ function scoreColor(avg: number) {
   return 'text-red-400'
 }
 
+function trendLabel(change: number | null) {
+  if (change === null) return null
+  if (change > 0) return { text: `+${change.toFixed(1)}`, color: 'text-green-400' }
+  if (change < 0) return { text: change.toFixed(1), color: 'text-red-400' }
+  return { text: '0', color: 'text-white/40' }
+}
+
+function formatMetricName(name: string) {
+  return name.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+}
+
 export default async function ManagerDashboard() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -74,8 +92,9 @@ export default async function ManagerDashboard() {
 
   const tenantId = profile.tenant_id as string
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+  const thirtyDaysAgoDate = thirtyDaysAgo.split('T')[0]
 
-  const [tenantResult, sessionsResult, assessmentResult] = await Promise.all([
+  const [tenantResult, sessionsResult, assessmentResult, externalMetricsResult] = await Promise.all([
     supabase.from('tenants').select('name').eq('id', tenantId).single(),
     supabase
       .from('sessions')
@@ -92,15 +111,20 @@ export default async function ManagerDashboard() {
       .order('generated_at', { ascending: false })
       .limit(1)
       .maybeSingle(),
+    supabase
+      .from('external_metrics')
+      .select('source, metric_name, metric_value, recorded_date')
+      .eq('tenant_id', tenantId)
+      .gte('recorded_date', thirtyDaysAgoDate)
+      .order('recorded_date', { ascending: false }),
   ])
 
   const practiceName = (tenantResult.data?.name as string | null) ?? 'My Practice'
   const sessions = (sessionsResult.data ?? []) as SessionRow[]
-  const cachedAssessment = assessmentResult.data as {
-    content: AssessmentContent; generated_at: string
-  } | null
+  const cachedAssessment = assessmentResult.data as { content: AssessmentContent; generated_at: string } | null
+  const externalMetrics = (externalMetricsResult.data ?? []) as ExternalMetric[]
 
-  // Score cards by associate type
+  // Training scores by associate type
   const scoresByType: Record<string, number[]> = {}
   for (const s of sessions) {
     const type = getAssociateType(s)
@@ -110,11 +134,36 @@ export default async function ManagerDashboard() {
     }
   }
 
-  // Weekly trend
   const scoredSessions = sessions
     .filter(s => s.score !== null && s.completed_at)
     .map(s => ({ score: Number(s.score), completed_at: s.completed_at }))
   const weeklyData = computeWeeklyData(scoredSessions)
+
+  // Patient Sentiment (Google Reviews)
+  const googleMetrics = externalMetrics.filter(m => m.source === 'google_reviews')
+  const ratingHistory = googleMetrics.filter(m => m.metric_name === 'star_rating')
+  const latestRating = ratingHistory[0]?.metric_value ?? null
+  const latestReviewCount = googleMetrics.find(m => m.metric_name === 'review_count')?.metric_value ?? null
+  const oldestRating = ratingHistory.length > 1 ? ratingHistory[ratingHistory.length - 1].metric_value : null
+  const ratingChange = latestRating !== null && oldestRating !== null ? latestRating - oldestRating : null
+
+  // Other external metrics: group by source + metric_name, latest value per group
+  const otherMetrics = externalMetrics.filter(m => m.source !== 'google_reviews')
+  const metricGroupMap = new Map<string, { latest: ExternalMetric; oldest: ExternalMetric }>()
+  for (const m of otherMetrics) {
+    const key = `${m.source}::${m.metric_name}`
+    const existing = metricGroupMap.get(key)
+    if (!existing) {
+      metricGroupMap.set(key, { latest: m, oldest: m })
+    } else {
+      if (m.recorded_date < existing.oldest.recorded_date) {
+        metricGroupMap.set(key, { ...existing, oldest: m })
+      }
+    }
+  }
+  const metricGroups = Array.from(metricGroupMap.values())
+
+  const hasExternalData = latestRating !== null || latestReviewCount !== null || metricGroups.length > 0
 
   return (
     <div className="flex min-h-screen bg-[#0a0e1a]">
@@ -145,7 +194,7 @@ export default async function ManagerDashboard() {
 
         <div className="flex flex-col gap-6">
 
-          {/* Score cards */}
+          {/* Training score cards */}
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             {ASSOCIATE_TYPES.map(({ key, label }) => {
               const scores = scoresByType[key] ?? []
@@ -157,9 +206,7 @@ export default async function ManagerDashboard() {
                   <p className="text-xs font-medium text-white/50">{label} Scenarios</p>
                   <p className={`mt-1 text-3xl font-bold ${avg !== null ? scoreColor(avg) : 'text-white/30'}`}>
                     {avg ?? '—'}
-                    {avg !== null && (
-                      <span className="ml-1 text-sm font-normal text-white/40">/100</span>
-                    )}
+                    {avg !== null && <span className="ml-1 text-sm font-normal text-white/40">/100</span>}
                   </p>
                   <p className="mt-0.5 text-xs text-white/40">
                     {scores.length} session{scores.length !== 1 ? 's' : ''}
@@ -182,6 +229,85 @@ export default async function ManagerDashboard() {
             initial={cachedAssessment}
             label="Team"
           />
+
+          {/* Real World Impact */}
+          <div className="rounded-xl border border-white/10 bg-[#111827] p-6">
+            <h2 className="mb-1 text-sm font-semibold text-[#2dd4bf]">Real World Impact</h2>
+            <p className="mb-5 text-xs text-white/40">External metrics from the last 30 days.</p>
+
+            {!hasExternalData ? (
+              <p className="py-4 text-sm text-white/30">
+                No external data yet. Configure Google Reviews or connect Zapier in the Admin panel.
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+
+                {/* Patient Sentiment card */}
+                {(latestRating !== null || latestReviewCount !== null) && (
+                  <div className="rounded-xl border border-white/10 bg-[#0a0e1a] p-5">
+                    <p className="mb-3 text-xs font-medium text-white/50">Patient Sentiment</p>
+                    {latestRating !== null && (
+                      <div className="flex items-end gap-1.5">
+                        <p className="text-3xl font-bold text-yellow-400">{latestRating.toFixed(1)}</p>
+                        <p className="mb-0.5 text-lg text-yellow-400/70">★</p>
+                      </div>
+                    )}
+                    <div className="mt-1 flex items-center gap-3">
+                      {latestReviewCount !== null && (
+                        <p className="text-xs text-white/40">
+                          {Math.round(latestReviewCount).toLocaleString()} reviews
+                        </p>
+                      )}
+                      {ratingChange !== null && (() => {
+                        const trend = trendLabel(ratingChange)
+                        return trend ? (
+                          <p className={`text-xs font-medium ${trend.color}`}>
+                            {trend.text} vs 30d ago
+                          </p>
+                        ) : null
+                      })()}
+                    </div>
+                    <p className="mt-2 text-xs text-white/25">Google Reviews</p>
+                  </div>
+                )}
+
+                {/* Zapier / other external metric cards */}
+                {metricGroups.map(({ latest, oldest }) => {
+                  const valueChange = latest.recorded_date !== oldest.recorded_date
+                    ? latest.metric_value - oldest.metric_value
+                    : null
+                  const trend = trendLabel(valueChange)
+                  const isPercent = latest.metric_name.includes('rate') || latest.metric_name.includes('percent')
+                  const displayValue = isPercent
+                    ? `${(latest.metric_value * (latest.metric_value <= 1 ? 100 : 1)).toFixed(1)}%`
+                    : latest.metric_value % 1 === 0
+                      ? Math.round(latest.metric_value).toLocaleString()
+                      : latest.metric_value.toFixed(2)
+
+                  return (
+                    <div
+                      key={`${latest.source}::${latest.metric_name}`}
+                      className="rounded-xl border border-white/10 bg-[#0a0e1a] p-5"
+                    >
+                      <p className="mb-3 text-xs font-medium text-white/50">
+                        {formatMetricName(latest.metric_name)}
+                      </p>
+                      <p className="text-3xl font-bold text-white">{displayValue}</p>
+                      <div className="mt-1 flex items-center gap-3">
+                        {trend && (
+                          <p className={`text-xs font-medium ${trend.color}`}>
+                            {trend.text} vs 30d ago
+                          </p>
+                        )}
+                      </div>
+                      <p className="mt-2 text-xs capitalize text-white/25">{latest.source}</p>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
         </div>
       </main>
     </div>

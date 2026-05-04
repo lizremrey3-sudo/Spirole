@@ -8,6 +8,7 @@ import DashboardNav from '@/app/dashboard/dashboard-nav'
 import AssessmentPanel from '@/app/dashboard/assessment-panel'
 import PracticeTrendChart from './practice-trend-chart'
 import TeamPanel from './team-panel'
+import IntegrationsPanel from './integrations-panel'
 import type { AssessmentContent } from '@/app/actions/assessments'
 
 function computeWeekBins() {
@@ -50,7 +51,7 @@ export default async function TenantDashboard() {
   const tenantId = profile.tenant_id as string
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
 
-  const [tenantResult, sessionsResult, assessmentResult, membersResult, practicesResult, invitationsResult] = await Promise.all([
+  const [tenantResult, sessionsResult, assessmentResult, membersResult, practicesResult, invitationsResult, integrationResult] = await Promise.all([
     supabase.from('tenants').select('name').eq('id', tenantId).single(),
     supabase
       .from('sessions')
@@ -83,6 +84,12 @@ export default async function TenantDashboard() {
       .eq('tenant_id', tenantId)
       .is('accepted_at', null)
       .order('created_at', { ascending: false }),
+    supabase
+      .from('practice_integrations')
+      .select('config')
+      .eq('tenant_id', tenantId)
+      .eq('source', 'google_reviews')
+      .maybeSingle(),
   ])
 
   const practiceName = (tenantResult.data?.name as string | null) ?? 'My Practice'
@@ -102,6 +109,10 @@ export default async function TenantDashboard() {
     scenarios: { associate_type: string } | { associate_type: string }[] | null
   }[]
   const cachedAssessment = assessmentResult.data as { content: AssessmentContent; generated_at: string } | null
+  const googlePlaceId = (integrationResult.data?.config as { place_id?: string } | null)?.place_id ?? null
+
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
+    ?? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
 
   const bins = computeWeekBins()
 
@@ -212,6 +223,12 @@ export default async function TenantDashboard() {
             practices={practices}
             currentUserId={user.id}
             initialPendingInvites={pendingInvites}
+          />
+
+          <IntegrationsPanel
+            tenantId={tenantId}
+            initialPlaceId={googlePlaceId}
+            baseUrl={baseUrl}
           />
         </div>
       </main>
