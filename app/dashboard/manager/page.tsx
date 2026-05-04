@@ -176,23 +176,27 @@ export default async function ManagerDashboard() {
             <h1 className="text-2xl font-semibold text-white">Manager Dashboard</h1>
             <p className="mt-1 text-sm text-white/50">{practiceName} · last 30 days</p>
           </div>
-          <div className="flex gap-3">
-            <Link
-              href="/dashboard/manager/team-sessions"
-              className="rounded-md border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white/70 transition-colors hover:bg-white/10"
-            >
-              Team Sessions
-            </Link>
-            <Link
-              href="/dashboard/scenarios/new"
-              className="rounded-md border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white/70 transition-colors hover:bg-white/10"
-            >
-              + Create Scenario
-            </Link>
-          </div>
+          <Link
+            href="/dashboard/scenarios/new"
+            className="rounded-md border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white/70 transition-colors hover:bg-white/10"
+          >
+            + Create Scenario
+          </Link>
         </div>
 
         <div className="flex flex-col gap-6">
+
+          {/* Team Sessions */}
+          <Link
+            href="/dashboard/manager/team-sessions"
+            className="flex items-center justify-between rounded-xl border border-white/10 bg-[#111827] px-6 py-4 transition-colors hover:border-white/20 hover:bg-white/5"
+          >
+            <div>
+              <p className="text-sm font-semibold text-white">Team Sessions</p>
+              <p className="mt-0.5 text-xs text-white/40">View and filter all completed sessions by team member</p>
+            </div>
+            <span className="text-sm text-white/30">View all →</span>
+          </Link>
 
           {/* Training score cards */}
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
