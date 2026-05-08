@@ -59,7 +59,7 @@ export default function LandingPage() {
 
           {/* Subheading */}
           <p className="mx-auto mb-10 max-w-md text-lg leading-relaxed text-white/45">
-            Made by optical professionals. Powered by AI.
+            Built for customer-facing teams. Powered by AI.
           </p>
 
           {/* CTAs */}

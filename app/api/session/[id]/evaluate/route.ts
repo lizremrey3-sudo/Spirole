@@ -177,7 +177,7 @@ export async function POST(
   }
 
   const scenarioRaw  = Array.isArray(session.scenarios) ? session.scenarios[0] : session.scenarios
-  const associateType = (scenarioRaw?.associate_type as string | undefined) ?? 'optician'
+  const associateType = (scenarioRaw?.associate_type as string | undefined) ?? 'manager'
   const sessionType  = associateType === 'manager' ? 'leadership_coaching' : 'sales_roleplay'
   const scenarioTitle = (scenarioRaw?.title as string | undefined) ?? 'Untitled Scenario'
   const scenarioDesc  = (scenarioRaw?.description as string | null | undefined) ?? null

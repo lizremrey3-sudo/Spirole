@@ -90,7 +90,7 @@ export default async function SessionPage({
   const persona = (scenarioRaw?.persona ?? {}) as PersonaJson
   const rubric = (scenarioRaw?.rubric ?? {}) as RubricJson
   const personaName = typeof persona.name === 'string' ? persona.name : 'AI'
-  const associateType = (scenarioRaw?.associate_type as string | undefined) ?? 'optician'
+  const associateType = (scenarioRaw?.associate_type as string | undefined) ?? 'manager'
   const isCoachingSession = associateType === 'manager'
   const userTurns = messages.filter(m => m.role === 'user').length
 

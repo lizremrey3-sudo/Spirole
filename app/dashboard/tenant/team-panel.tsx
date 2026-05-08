@@ -25,31 +25,33 @@ type PendingInvite = {
 
 type Practice = { id: string; name: string }
 
-const SCENARIO_OPTIONS = [
-  { label: 'Optician Scenario',                  associate_type: 'optician',     session_type: undefined },
-  { label: 'Technician Scenario',                associate_type: 'technician',   session_type: undefined },
-  { label: 'Receptionist Scenario',              associate_type: 'receptionist', session_type: undefined },
-  { label: 'Manager Scenario',                   associate_type: 'manager',      session_type: undefined },
-  { label: 'Associate-to-Associate Interaction', associate_type: 'optician',     session_type: 'sales_roleplay' },
-]
-
 const ROLE_LABELS: Record<string, string> = {
   rep:     'Associate',
   manager: 'Manager',
   admin:   'Admin',
 }
 
+type AssociateTypeOption = { value: string; label: string }
+
 export default function TeamPanel({
   initialMembers,
   practices,
   currentUserId,
   initialPendingInvites,
+  associateTypes,
 }: {
   initialMembers: Member[]
   practices: Practice[]
   currentUserId: string
   initialPendingInvites: PendingInvite[]
+  associateTypes?: AssociateTypeOption[]
 }) {
+  const scenarioOptions = (associateTypes ?? [
+    { value: 'optician',     label: 'Optician' },
+    { value: 'technician',   label: 'Technician' },
+    { value: 'receptionist', label: 'Receptionist' },
+    { value: 'manager',      label: 'Manager' },
+  ]).map(t => ({ label: `${t.label} Scenario`, associate_type: t.value }))
   const router = useRouter()
   const [members, setMembers] = useState(initialMembers)
   const [pendingInvites, setPendingInvites] = useState(initialPendingInvites)
@@ -149,12 +151,11 @@ export default function TeamPanel({
             <>
               <div className="fixed inset-0 z-10" onClick={() => setShowScenarioMenu(false)} />
               <div className="absolute left-0 top-full z-20 mt-1 w-60 rounded-lg border border-white/10 bg-[#111827] py-1 shadow-xl">
-                {SCENARIO_OPTIONS.map(opt => (
+                {scenarioOptions.map(opt => (
                   <button
                     key={opt.label}
                     onClick={() => {
                       const params = new URLSearchParams({ associate_type: opt.associate_type })
-                      if (opt.session_type) params.set('session_type', opt.session_type)
                       router.push(`/dashboard/scenarios/new?${params.toString()}`)
                       setShowScenarioMenu(false)
                     }}

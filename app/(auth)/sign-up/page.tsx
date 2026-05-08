@@ -1,11 +1,17 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useState } from 'react'
 import Link from 'next/link'
 import { signUp } from '@/app/actions/auth'
+import { INDUSTRIES, getAssociateTypesForIndustry } from '@/lib/industry-types'
+
+const inputCls = 'rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-[#2dd4bf]/60 focus:ring-1 focus:ring-[#2dd4bf]/40'
+const selectCls = `${inputCls} bg-[#0a0e1a]`
 
 export default function SignUpPage() {
   const [state, action, isPending] = useActionState(signUp, null)
+  const [industry, setIndustry] = useState('optical')
+  const associateTypes = getAssociateTypesForIndustry(industry)
 
   return (
     <>
@@ -26,9 +32,40 @@ export default function SignUpPage() {
             name="companyName"
             type="text"
             required
-            className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-[#2dd4bf]/60 focus:ring-1 focus:ring-[#2dd4bf]/40"
+            className={inputCls}
           />
         </div>
+
+        <div className="flex flex-col gap-1">
+          <label htmlFor="industry" className="text-sm font-medium text-white/70">Industry</label>
+          <select
+            id="industry"
+            name="industry"
+            required
+            value={industry}
+            onChange={e => setIndustry(e.target.value)}
+            className={selectCls}
+          >
+            {INDUSTRIES.map(({ value, label }) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label htmlFor="primary_associate_type" className="text-sm font-medium text-white/70">Primary associate type</label>
+          <select
+            id="primary_associate_type"
+            name="primary_associate_type"
+            required
+            className={selectCls}
+          >
+            {associateTypes.map(({ value, label }) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
+          </select>
+        </div>
+
         <div className="flex flex-col gap-1">
           <label htmlFor="email" className="text-sm font-medium text-white/70">Email</label>
           <input
@@ -36,7 +73,7 @@ export default function SignUpPage() {
             name="email"
             type="email"
             required
-            className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-[#2dd4bf]/60 focus:ring-1 focus:ring-[#2dd4bf]/40"
+            className={inputCls}
           />
         </div>
         <div className="flex flex-col gap-1">
@@ -47,7 +84,7 @@ export default function SignUpPage() {
             type="password"
             required
             minLength={6}
-            className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-[#2dd4bf]/60 focus:ring-1 focus:ring-[#2dd4bf]/40"
+            className={inputCls}
           />
         </div>
         <button

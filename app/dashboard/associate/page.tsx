@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import ScoreChart from './score-chart'
 import DashboardNav from '../dashboard-nav'
 import ScenariosPanel from '../scenarios-panel'
+import { getAssociateTypesForIndustry } from '@/lib/industry-types'
 
 type EvalResult = {
   scores: Record<string, { score: number; rationale: string }>
@@ -39,6 +40,13 @@ export default async function AssociatePage() {
     .maybeSingle()
   if (!subscription || subscription.status === 'inactive') redirect('/pricing')
 
+  const { data: tenant } = await supabase
+    .from('tenants')
+    .select('industry')
+    .eq('id', profile.tenant_id as string)
+    .single()
+  const tenantIndustry = (tenant?.industry as string | null) ?? 'optical'
+
   const [{ data: raw }, { data: scenarios }] = await Promise.all([
     supabase
       .from('sessions')
@@ -49,7 +57,8 @@ export default async function AssociatePage() {
     supabase
       .from('scenarios')
       .select('id, title, description, associate_type')
-      .eq('is_active', true),
+      .eq('is_active', true)
+      .eq('industry', tenantIndustry),
   ])
 
   const sessions = (raw ?? []).map(s => {
@@ -80,7 +89,7 @@ export default async function AssociatePage() {
 
       <main className="mx-auto w-full max-w-4xl flex-1 min-w-0 px-6 py-10">
 
-        <ScenariosPanel scenarios={scenarios ?? []} />
+        <ScenariosPanel scenarios={scenarios ?? []} roleTypes={getAssociateTypesForIndustry(tenantIndustry)} />
 
         <div className="my-10 border-t border-white/10" />
 

@@ -72,13 +72,13 @@ export async function generateAssessment(
     return `- ${date}: ${type} scenario, score ${score}/100${overallFeedback ? `. ${overallFeedback}` : ''}`
   }).join('\n')
 
-  const prompt = `You are an expert in optical practice team performance and communication coaching.
+  const prompt = `You are an expert in team performance and communication coaching.
 
 The following are AI roleplay training session results from the past 14 days:
 
 ${sessionLines}
 
-Generate a substantive team assessment. No one-liners — write in the coaching voice of a seasoned practice consultant.
+Generate a substantive team assessment. No one-liners — write in the coaching voice of a seasoned performance consultant.
 
 Return ONLY valid JSON with EXACTLY these keys:
 {

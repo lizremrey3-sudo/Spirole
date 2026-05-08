@@ -7,10 +7,16 @@ import { createClient } from '@/lib/supabase/server'
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 const STAFF_ROLE_LABELS: Record<string, string> = {
-  optician:     'optician',
-  technician:   'ophthalmic technician',
-  receptionist: 'receptionist',
-  manager:      'practice manager',
+  optician:             'optician',
+  technician:           'ophthalmic technician',
+  receptionist:         'receptionist',
+  manager:              'manager',
+  sales_associate:      'sales associate',
+  call_center:          'call center representative',
+  consultant:           'consultant',
+  insurance_specialist: 'insurance specialist',
+  account_executive:    'account executive',
+  clinical_staff:       'clinical staff member',
 }
 
 type PersonaJson = Record<string, unknown>
@@ -46,8 +52,8 @@ async function generateOpeningMessage(
     )
   } else {
     const staffRole = STAFF_ROLE_LABELS[associateType] ?? 'staff member'
-    const charName  = name ?? 'a patient'
-    lines.push(`You are ${charName}, a patient at an optometric practice, about to speak with the ${staffRole}.`)
+    const charName  = name ?? 'a customer'
+    lines.push(`You are ${charName}, a customer or client, about to speak with the ${staffRole}.`)
     if (tone)       lines.push(`Your demeanor: ${tone}.`)
     if (background) lines.push(`Your background: ${background}.`)
     if (complaint)  lines.push(`Your reason for visiting: ${complaint}.`)
@@ -118,7 +124,7 @@ export async function createSession(scenarioId: string): Promise<CreateSessionRe
     .single()
 
   const persona       = (scenario?.persona ?? {}) as PersonaJson
-  const associateType = (scenario?.associate_type as string | undefined) ?? 'optician'
+  const associateType = (scenario?.associate_type as string | undefined) ?? 'manager'
   const sessionType   = associateType === 'manager' ? 'leadership_coaching' : 'sales_roleplay'
   const title         = (scenario?.title as string | undefined) ?? 'Training Scenario'
   const description   = (scenario?.description as string | null | undefined) ?? null
@@ -144,7 +150,7 @@ export async function createSession(scenarioId: string): Promise<CreateSessionRe
   } catch {
     openingMessage = sessionType === 'leadership_coaching'
       ? "What's on your mind today?"
-      : "Hi, I have an appointment. I'm not sure who I should be speaking with."
+      : "Hi, I'm not sure who I should be speaking with."
   }
 
   await supabase.from('session_messages').insert({

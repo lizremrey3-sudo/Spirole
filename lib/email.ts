@@ -23,7 +23,7 @@ export async function sendInviteEmail({
     <p style="margin:0 0 4px;font-size:11px;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;color:#2dd4bf;">SPIROLE</p>
     <h1 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#fff;line-height:1.3;">You're invited to join Spirole</h1>
     <p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:rgba(255,255,255,0.55);">
-      <strong style="color:rgba(255,255,255,0.8);">${invitedByEmail}</strong> has invited you to their practice on Spirole — AI-powered communication training for optical teams.
+      <strong style="color:rgba(255,255,255,0.8);">${invitedByEmail}</strong> has invited you to join their team on Spirole — AI-powered communication training for customer-facing teams.
     </p>
     <a href="${joinUrl}" style="display:inline-block;padding:12px 28px;background:#2dd4bf;color:#0a0e1a;font-size:14px;font-weight:600;text-decoration:none;border-radius:8px;">Accept Invitation</a>
     <p style="margin:28px 0 0;font-size:12px;color:rgba(255,255,255,0.25);line-height:1.6;">

@@ -15,10 +15,16 @@ type Session = {
 }
 
 const ASSOCIATE_TYPE_LABELS: Record<string, string> = {
-  optician: 'Optician',
-  technician: 'Technician',
-  receptionist: 'Receptionist',
-  manager: 'Manager',
+  optician:             'Optician',
+  technician:           'Technician',
+  receptionist:         'Receptionist',
+  manager:              'Manager',
+  sales_associate:      'Sales Associate',
+  call_center:          'Call Center',
+  consultant:           'Consultant',
+  insurance_specialist: 'Insurance Specialist',
+  account_executive:    'Account Executive',
+  clinical_staff:       'Clinical Staff',
 }
 
 function scoreColor(s: number) {

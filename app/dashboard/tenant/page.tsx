@@ -10,6 +10,7 @@ import PracticeTrendChart from './practice-trend-chart'
 import TeamPanel from './team-panel'
 import IntegrationsPanel from './integrations-panel'
 import type { AssessmentContent } from '@/app/actions/assessments'
+import { getAssociateTypesForIndustry } from '@/lib/industry-types'
 
 function computeWeekBins() {
   const now = Date.now()
@@ -26,13 +27,6 @@ function scoreColor(avg: number) {
   if (avg >= 40) return 'text-yellow-400'
   return 'text-red-400'
 }
-
-const ASSOCIATE_TYPES = [
-  { key: 'optician',     label: 'Optician' },
-  { key: 'technician',   label: 'Technician' },
-  { key: 'receptionist', label: 'Receptionist' },
-  { key: 'manager',      label: 'Manager' },
-] as const
 
 export default async function TenantDashboard() {
   const supabase = await createClient()
@@ -52,7 +46,7 @@ export default async function TenantDashboard() {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
 
   const [tenantResult, sessionsResult, assessmentResult, membersResult, practicesResult, invitationsResult, integrationResult] = await Promise.all([
-    supabase.from('tenants').select('name').eq('id', tenantId).single(),
+    supabase.from('tenants').select('name, industry').eq('id', tenantId).single(),
     supabase
       .from('sessions')
       .select('score, completed_at, scenarios(associate_type)')
@@ -93,6 +87,8 @@ export default async function TenantDashboard() {
   ])
 
   const practiceName = (tenantResult.data?.name as string | null) ?? 'My Practice'
+  const tenantIndustry = (tenantResult.data?.industry as string | null) ?? 'optical'
+  const ASSOCIATE_TYPES = getAssociateTypesForIndustry(tenantIndustry).map(t => ({ key: t.value, label: t.label }))
 
   type RawMember = { id: string; full_name: string | null; email: string | null; role: string; is_active: boolean }
   const teamMembers = ((membersResult.data ?? []) as RawMember[]).map(m => ({
@@ -223,6 +219,7 @@ export default async function TenantDashboard() {
             practices={practices}
             currentUserId={user.id}
             initialPendingInvites={pendingInvites}
+            associateTypes={ASSOCIATE_TYPES.map(t => ({ value: t.key, label: t.label }))}
           />
 
           <IntegrationsPanel

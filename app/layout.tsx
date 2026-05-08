@@ -5,8 +5,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Spirole — Communication Training for Optical Teams",
-  description: "AI-powered communication training made by optical professionals.",
+  title: "Spirole — Communication Training for Teams",
+  description: "AI-powered communication training for customer-facing teams.",
 };
 
 export default function RootLayout({

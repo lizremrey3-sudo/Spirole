@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { signOut } from '@/app/actions/auth'
 import ScenarioForm from './scenario-form'
+import { getAssociateTypesForIndustry } from '@/lib/industry-types'
 
 export default async function NewScenarioPage({
   searchParams,
@@ -17,11 +18,19 @@ export default async function NewScenarioPage({
 
   const { data: profile } = await supabase
     .from('users')
-    .select('role')
+    .select('role, tenant_id')
     .eq('id', user.id)
     .single()
 
   if (profile?.role !== 'admin') redirect('/dashboard')
+
+  const { data: tenant } = await supabase
+    .from('tenants')
+    .select('industry')
+    .eq('id', profile.tenant_id as string)
+    .single()
+  const tenantIndustry = (tenant?.industry as string | null) ?? 'optical'
+  const allowedTypes = getAssociateTypesForIndustry(tenantIndustry)
 
   return (
     <div className="flex min-h-full flex-col bg-[#0a0e1a]">
@@ -54,7 +63,11 @@ export default async function NewScenarioPage({
         </div>
 
         <div className="rounded-xl border border-white/10 bg-[#111827] px-6 py-6">
-          <ScenarioForm defaultAssociateType={associate_type} defaultSessionType={session_type} />
+          <ScenarioForm
+            defaultAssociateType={associate_type}
+            defaultSessionType={session_type}
+            allowedAssociateTypes={allowedTypes}
+          />
         </div>
       </main>
     </div>

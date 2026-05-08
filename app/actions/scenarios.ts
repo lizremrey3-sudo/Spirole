@@ -6,7 +6,11 @@ import { createClient } from '@/lib/supabase/server'
 
 type ActionState = { error?: string } | null
 
-const VALID_TYPES = ['manager', 'optician', 'technician', 'receptionist']
+const VALID_TYPES = [
+  'manager', 'optician', 'technician', 'receptionist',
+  'sales_associate', 'call_center', 'consultant',
+  'insurance_specialist', 'account_executive', 'clinical_staff',
+]
 
 export async function createScenario(_: ActionState, formData: FormData): Promise<ActionState> {
   const supabase = await createClient()
@@ -21,6 +25,13 @@ export async function createScenario(_: ActionState, formData: FormData): Promis
     .single()
 
   if (profile?.role !== 'admin') return { error: 'Admin access required.' }
+
+  const { data: tenant } = await supabase
+    .from('tenants')
+    .select('industry')
+    .eq('id', profile.tenant_id as string)
+    .single()
+  const tenantIndustry = (tenant?.industry as string | null) ?? 'optical'
 
   const title = (formData.get('title') as string).trim()
   const description = (formData.get('description') as string | null)?.trim() || null
@@ -84,6 +95,7 @@ export async function createScenario(_: ActionState, formData: FormData): Promis
     persona,
     rubric,
     patient_context,
+    industry: tenantIndustry,
     tenant_id: profile.tenant_id,
     created_by: user.id,
     is_active: true,

@@ -3,13 +3,7 @@
 import { useActionState, useState } from 'react'
 import Link from 'next/link'
 import { createScenario } from '@/app/actions/scenarios'
-
-const ASSOCIATE_TYPES = [
-  { value: 'manager',      label: 'Manager' },
-  { value: 'optician',     label: 'Optician' },
-  { value: 'technician',   label: 'Technician' },
-  { value: 'receptionist', label: 'Receptionist' },
-] as const
+import type { AssociateType } from '@/lib/industry-types'
 
 const TONE_OPTIONS = [
   'Professional',
@@ -39,10 +33,18 @@ const sectionLabel = 'text-sm font-medium text-white/70'
 export default function ScenarioForm({
   defaultAssociateType,
   defaultSessionType,
+  allowedAssociateTypes,
 }: {
   defaultAssociateType?: string
   defaultSessionType?: string
+  allowedAssociateTypes?: { value: string; label: string }[]
 } = {}) {
+  const associateTypeOptions = allowedAssociateTypes ?? [
+    { value: 'manager',      label: 'Manager' },
+    { value: 'optician',     label: 'Optician' },
+    { value: 'technician',   label: 'Technician' },
+    { value: 'receptionist', label: 'Receptionist' },
+  ]
   const [state, formAction, pending] = useActionState(createScenario, null)
 
   // Persona fields
@@ -106,10 +108,10 @@ export default function ScenarioForm({
           id="associate_type"
           name="associate_type"
           required
-          defaultValue={defaultAssociateType ?? 'optician'}
+          defaultValue={defaultAssociateType ?? associateTypeOptions[0]?.value ?? 'manager'}
           className={`${inputCls} bg-[#0a0e1a]`}
         >
-          {ASSOCIATE_TYPES.map(({ value, label }) => (
+          {associateTypeOptions.map(({ value, label }) => (
             <option key={value} value={value}>{label}</option>
           ))}
         </select>

@@ -4,24 +4,27 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createSession } from '@/app/actions/sessions'
 
-type AssociateType = 'manager' | 'optician' | 'technician' | 'receptionist'
-
 type Scenario = {
   id: string
   title: string
   description: string | null
-  associate_type: AssociateType
+  associate_type: string
 }
 
-const ROLES: { type: AssociateType; label: string; description: string }[] = [
-  { type: 'manager',      label: 'Manager',      description: 'Leadership and team oversight scenarios' },
-  { type: 'optician',     label: 'Optician',      description: 'Optical sales and patient consultation' },
-  { type: 'technician',   label: 'Technician',    description: 'Technical support and equipment handling' },
-  { type: 'receptionist', label: 'Receptionist',  description: 'Front desk and scheduling workflows' },
-]
+type RoleType = {
+  value: string
+  label: string
+  description: string
+}
 
-export default function ScenariosPanel({ scenarios }: { scenarios: Scenario[] }) {
-  const [selected, setSelected] = useState<AssociateType | null>(null)
+export default function ScenariosPanel({
+  scenarios,
+  roleTypes,
+}: {
+  scenarios: Scenario[]
+  roleTypes: RoleType[]
+}) {
+  const [selected, setSelected] = useState<string | null>(null)
   const [starting, setStarting] = useState<string | null>(null)
   const [startError, setStartError] = useState<string | null>(null)
   const router = useRouter()
@@ -46,7 +49,7 @@ export default function ScenariosPanel({ scenarios }: { scenarios: Scenario[] })
     }
   }
 
-  const countFor = (type: AssociateType) => scenarios.filter(s => s.associate_type === type).length
+  const countFor = (type: string) => scenarios.filter(s => s.associate_type === type).length
 
   const filtered = selected ? scenarios.filter(s => s.associate_type === selected) : []
 
@@ -55,13 +58,13 @@ export default function ScenariosPanel({ scenarios }: { scenarios: Scenario[] })
       <h2 className="mb-4 text-base font-semibold text-[#2dd4bf]">Training Scenarios</h2>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {ROLES.map(({ type, label, description }) => {
-          const count = countFor(type)
-          const isSelected = selected === type
+        {roleTypes.map(({ value, label, description }) => {
+          const count = countFor(value)
+          const isSelected = selected === value
           return (
             <button
-              key={type}
-              onClick={() => setSelected(isSelected ? null : type)}
+              key={value}
+              onClick={() => setSelected(isSelected ? null : value)}
               className={[
                 'flex flex-col items-start gap-2 rounded-xl border p-4 text-left transition-all',
                 isSelected
@@ -87,7 +90,7 @@ export default function ScenariosPanel({ scenarios }: { scenarios: Scenario[] })
         <div className="mt-6">
           {filtered.length === 0 ? (
             <p className="text-sm text-white/50">
-              No active scenarios for {ROLES.find(r => r.type === selected)?.label} yet.
+              No active scenarios for {roleTypes.find(r => r.value === selected)?.label} yet.
             </p>
           ) : (
             <ul className="flex flex-col gap-3">

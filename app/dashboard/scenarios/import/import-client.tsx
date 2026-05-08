@@ -54,7 +54,11 @@ function parseCsv(text: string): string[][] {
 
 // ── Types & validation ────────────────────────────────────────────────────────
 
-const VALID_TYPES = ['manager', 'optician', 'technician', 'receptionist']
+const VALID_TYPES = [
+  'manager', 'optician', 'technician', 'receptionist',
+  'sales_associate', 'call_center', 'consultant',
+  'insurance_specialist', 'account_executive', 'clinical_staff',
+]
 const REQUIRED_HEADERS = ['title', 'associate_type', 'persona', 'rubric']
 
 type ParsedRow = {

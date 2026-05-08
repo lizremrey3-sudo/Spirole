@@ -17,10 +17,16 @@ type PatientContext = {
 }
 
 const ASSOCIATE_ROLE_LABELS: Record<string, string> = {
-  optician:     'the optician helping you choose frames, understand your prescription, and fit your eyewear',
-  technician:   'the ophthalmic technician conducting your pre-examination workup',
-  receptionist: 'the front desk receptionist',
-  manager:      'the practice manager',
+  optician:             'the optician helping you choose frames, understand your prescription, and fit your eyewear',
+  technician:           'the ophthalmic technician conducting your pre-examination workup',
+  receptionist:         'the front desk receptionist',
+  manager:              'the manager',
+  sales_associate:      'the sales associate assisting you',
+  call_center:          'the customer service representative you called',
+  consultant:           'the consultant you are meeting with',
+  insurance_specialist: 'the insurance specialist helping you with your coverage',
+  account_executive:    'the account executive you are speaking with',
+  clinical_staff:       'the clinical staff member attending to you',
 }
 
 function str(v: unknown): string | null {
@@ -46,18 +52,17 @@ function buildSalesPrompt(
 
   const parts: string[] = [
     `ROLE ASSIGNMENT — read carefully:`,
-    `YOU are ${name ? `${name}, ` : ''}the PATIENT/CUSTOMER visiting an optometric practice.`,
-    `The HUMAN typing to you is the ${humanRole} — they are the one being trained.`,
-    `You play the patient. The human plays the staff. Never swap these roles.`,
+    `YOU are ${name ? `${name}, ` : ''}a CUSTOMER or CLIENT in this scenario.`,
+    `The HUMAN typing to you is ${humanRole} — they are the one being trained.`,
+    `You play the customer/client. The human plays the staff member. Never swap these roles.`,
     '',
-    `Setting: an optometric/optical retail clinic.`,
     `Scenario: ${scenarioTitle}`,
   ]
   if (scenarioDescription) parts.push(scenarioDescription)
 
-  parts.push('\nYour character as the patient:')
-  parts.push(`- Demeanor: ${tone ?? 'Friendly but a little uncertain about optical jargon'}`)
-  parts.push(`- Background: ${background ?? 'Wears glasses or contacts, visits an eye doctor roughly once a year'}`)
+  parts.push('\nYour character as the customer/client:')
+  parts.push(`- Demeanor: ${tone ?? 'Friendly but a little uncertain'}`)
+  parts.push(`- Background: ${background ?? 'Typical customer engaging with this type of business'}`)
   if (chiefComplaint) parts.push(`- Reason for visit: ${chiefComplaint}`)
   if (insurance)      parts.push(`- Insurance: ${insurance}`)
   if (goals)          parts.push(`- What you want: ${goals}`)
@@ -83,13 +88,13 @@ function buildSalesPrompt(
 
   parts.push(
     '',
-    'IMPORTANT — Session variation: Generate fresh, unique patient details for every session — vary the patient\'s name, specific complaint details, appointment time, prescription values, insurance situation, and personality. Use the persona and patient_context fields as a template and starting point only, not as fixed facts to repeat verbatim. Every session should feel like a genuinely different patient encounter.',
+    'IMPORTANT — Session variation: Generate fresh, unique customer/client details for every session — vary the name, specific situation details, and personality. Use the persona fields as a template and starting point only, not as fixed facts to repeat verbatim. Every session should feel like a genuinely different encounter.',
     '',
-    'Stay completely in character as the patient throughout the entire conversation.',
+    'Stay completely in character as the customer/client throughout the entire conversation.',
     'Do not break character, acknowledge being an AI, or offer coaching feedback.',
-    'Respond the way a real patient would: ask questions a layperson would ask, show natural hesitation about cost or procedures, and don\'t volunteer all information upfront — let the staff member draw it out.',
+    'Respond naturally: ask questions a real person would ask, show hesitation about cost or procedures, and don\'t volunteer all information upfront — let the staff member draw it out.',
     'Be realistic, not a pushover. Push back appropriately when something feels confusing or expensive.',
-    'Ask only ONE question per message, two at most. Never ask multiple questions in a single response. Keep responses concise and natural like a real patient would speak.',
+    'Ask only ONE question per message, two at most. Never ask multiple questions in a single response. Keep responses concise and natural.',
   )
   return parts.join('\n')
 }
@@ -180,7 +185,7 @@ export async function POST(
   const tenantId      = session.tenant_id as string
   const scenario      = Array.isArray(session.scenarios) ? session.scenarios[0] : session.scenarios
   const persona        = (scenario?.persona ?? {}) as PersonaJson
-  const associateType  = (scenario?.associate_type as string | undefined) ?? 'optician'
+  const associateType  = (scenario?.associate_type as string | undefined) ?? 'manager'
   const sessionType    = associateType === 'manager' ? 'leadership_coaching' : 'sales_roleplay'
   const scenarioTitle  = (scenario?.title as string | undefined) ?? 'Training Scenario'
   const scenarioDesc   = (scenario?.description as string | null | undefined) ?? null

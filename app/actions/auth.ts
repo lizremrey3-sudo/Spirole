@@ -10,6 +10,7 @@ export async function signUp(_: ActionState, formData: FormData): Promise<Action
   const email = (formData.get('email') as string).trim()
   const password = formData.get('password') as string
   const companyName = (formData.get('companyName') as string).trim()
+  const industry = (formData.get('industry') as string | null)?.trim() || 'optical'
 
   const supabase = await createClient()
   const { data, error } = await supabase.auth.signUp({ email, password })
@@ -22,7 +23,7 @@ export async function signUp(_: ActionState, formData: FormData): Promise<Action
 
   const { data: tenant, error: tenantError } = await admin
     .from('tenants')
-    .insert({ name: companyName, slug })
+    .insert({ name: companyName, slug, industry })
     .select('id')
     .single()
 

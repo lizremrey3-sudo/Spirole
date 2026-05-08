@@ -7,13 +7,7 @@ import DashboardNav from '@/app/dashboard/dashboard-nav'
 import AssessmentPanel from '@/app/dashboard/assessment-panel'
 import TrendChart from './trend-chart'
 import type { AssessmentContent } from '@/app/actions/assessments'
-
-const ASSOCIATE_TYPES = [
-  { key: 'optician',     label: 'Optician' },
-  { key: 'technician',  label: 'Technician' },
-  { key: 'receptionist', label: 'Receptionist' },
-  { key: 'manager',     label: 'Manager' },
-] as const
+import { getAssociateTypesForIndustry } from '@/lib/industry-types'
 
 type SessionRow = {
   score: number | string | null
@@ -95,7 +89,7 @@ export default async function ManagerDashboard() {
   const thirtyDaysAgoDate = thirtyDaysAgo.split('T')[0]
 
   const [tenantResult, sessionsResult, assessmentResult, externalMetricsResult] = await Promise.all([
-    supabase.from('tenants').select('name').eq('id', tenantId).single(),
+    supabase.from('tenants').select('name, industry').eq('id', tenantId).single(),
     supabase
       .from('sessions')
       .select('score, completed_at, scenarios(associate_type)')
@@ -120,6 +114,8 @@ export default async function ManagerDashboard() {
   ])
 
   const practiceName = (tenantResult.data?.name as string | null) ?? 'My Practice'
+  const tenantIndustry = (tenantResult.data?.industry as string | null) ?? 'optical'
+  const ASSOCIATE_TYPES = getAssociateTypesForIndustry(tenantIndustry).map(t => ({ key: t.value, label: t.label }))
   const sessions = (sessionsResult.data ?? []) as SessionRow[]
   const cachedAssessment = assessmentResult.data as { content: AssessmentContent; generated_at: string } | null
   const externalMetrics = (externalMetricsResult.data ?? []) as ExternalMetric[]

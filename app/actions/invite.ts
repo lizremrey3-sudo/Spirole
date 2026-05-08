@@ -31,6 +31,13 @@ export async function inviteUser(_: ActionState, formData: FormData): Promise<Ac
 
   const admin = createAdminClient()
   const tenantId = profile.tenant_id as string
+
+  const { data: tenant } = await admin
+    .from('tenants')
+    .select('industry')
+    .eq('id', tenantId)
+    .single()
+  const tenantIndustry = (tenant?.industry as string | null) ?? 'optical'
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.spiroletrainer.com'
 
   // Check for an existing invitation for this email in this tenant
@@ -55,7 +62,7 @@ export async function inviteUser(_: ActionState, formData: FormData): Promise<Ac
     authUserId = existing.auth_user_id as string
     await admin
       .from('invitations')
-      .update({ token, token_expires_at: tokenExpiresAt, role, practice_name: practiceName ?? null, invited_by: user.id, created_at: new Date().toISOString() })
+      .update({ token, token_expires_at: tokenExpiresAt, role, practice_name: practiceName ?? null, invited_by: user.id, industry: tenantIndustry, created_at: new Date().toISOString() })
       .eq('id', existing.id)
   } else {
     // New invite — create the auth user with a random password (user will set their own via /join)
@@ -83,6 +90,7 @@ export async function inviteUser(_: ActionState, formData: FormData): Promise<Ac
       auth_user_id: authUserId,
       token,
       token_expires_at: tokenExpiresAt,
+      industry: tenantIndustry,
     })
 
     if (insertError) {
