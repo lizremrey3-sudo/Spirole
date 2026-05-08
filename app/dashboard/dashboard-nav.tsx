@@ -19,7 +19,10 @@ export default function DashboardNav({
     { href: dashboardHref, label: 'Dashboard' },
     { href: '/dashboard/associate', label: 'Sessions' },
     { href: '/dashboard/think', label: 'Reflect' },
-    ...(role === 'admin' ? [{ href: '/dashboard/tenant', label: 'Admin' }] : []),
+    ...(role === 'admin' ? [
+      { href: '/dashboard/tenant', label: 'Admin' },
+      { href: '/admin/engagement', label: 'Engagement' },
+    ] : []),
   ]
 
   const isActive = (href: string) =>
