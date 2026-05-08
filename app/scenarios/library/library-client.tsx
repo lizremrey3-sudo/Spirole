@@ -8,7 +8,7 @@ export type SharedScenario = {
   title: string
   category: string | null
   core_skill: string | null
-  difficulty: number | null
+  difficulty_default: number | null
   associate_type: string
   description: string | null
 }
@@ -299,7 +299,7 @@ function ScenarioCard({
 }) {
   const isCustomized = !!customization
   const isEnabled = customization?.is_enabled ?? false
-  const effectiveDifficulty = customization?.difficulty_override ?? scenario.difficulty
+  const effectiveDifficulty = customization?.difficulty_override ?? scenario.difficulty_default
 
   return (
     <div

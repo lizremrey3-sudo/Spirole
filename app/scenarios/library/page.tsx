@@ -25,7 +25,7 @@ export default async function ScenarioLibraryPage() {
   const [scenariosResult, customizationsResult] = await Promise.all([
     supabase
       .from('scenarios')
-      .select('id, title, category, core_skill, difficulty, associate_type, description')
+      .select('id, title, category, core_skill, difficulty_default, associate_type, description')
       .eq('is_shared', true)
       .eq('is_active', true)
       .order('category', { ascending: true }),
