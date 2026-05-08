@@ -58,7 +58,7 @@ export default async function AssociatePage() {
       .from('scenarios')
       .select('id, title, description, associate_type')
       .eq('is_active', true)
-      .eq('industry', tenantIndustry),
+      .or(`industry.eq.${tenantIndustry},industry.eq.all`),
   ])
 
   const sessions = (raw ?? []).map(s => {
