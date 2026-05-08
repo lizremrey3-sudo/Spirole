@@ -19,6 +19,9 @@ export default function DashboardNav({
     { href: dashboardHref, label: 'Dashboard' },
     { href: '/dashboard/associate', label: 'Sessions' },
     { href: '/dashboard/think', label: 'Reflect' },
+    ...(['admin', 'manager'].includes(role ?? '') ? [
+      { href: '/scenarios/library', label: 'Scenario Library' },
+    ] : []),
     ...(role === 'admin' ? [
       { href: '/dashboard/tenant', label: 'Admin' },
       { href: '/admin/engagement', label: 'Engagement' },
