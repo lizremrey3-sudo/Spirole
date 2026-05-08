@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import PromoCodeForm from './promo-code-form'
