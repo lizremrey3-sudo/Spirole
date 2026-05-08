@@ -18,7 +18,7 @@ export default function LandingPage() {
               href="/sign-up"
               className="rounded-lg bg-teal-400 px-5 py-2 text-sm font-semibold text-[#0a0e1a] transition-all hover:bg-teal-300 hover:shadow-[0_0_20px_rgba(45,212,191,0.35)]"
             >
-              Start Free Trial
+              Sign Up
             </Link>
           </div>
         </div>
@@ -68,7 +68,7 @@ export default function LandingPage() {
               href="/sign-up"
               className="rounded-lg bg-teal-400 px-9 py-3.5 text-sm font-semibold text-[#0a0e1a] transition-all hover:bg-teal-300 hover:shadow-[0_0_28px_rgba(45,212,191,0.4)]"
             >
-              Start Free Trial
+              Sign Up
             </Link>
             <Link
               href="/pricing"
@@ -186,12 +186,12 @@ export default function LandingPage() {
             <h2 className="mb-3 text-3xl font-bold tracking-tight text-white sm:text-4xl">
               Ready to level up your team?
             </h2>
-            <p className="mb-8 text-white/45">Start practicing today. No credit card required.</p>
+            <p className="mb-8 text-white/45">Start practicing today.</p>
             <Link
               href="/sign-up"
               className="inline-block rounded-lg bg-teal-400 px-9 py-3.5 text-sm font-semibold text-[#0a0e1a] transition-all hover:bg-teal-300 hover:shadow-[0_0_28px_rgba(45,212,191,0.4)]"
             >
-              Start Free Trial
+              Sign Up
             </Link>
           </div>
         </div>
