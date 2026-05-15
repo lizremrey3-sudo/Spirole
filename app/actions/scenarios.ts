@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 type ActionState = { error?: string } | null
 
@@ -87,6 +88,8 @@ export async function createScenario(_: ActionState, formData: FormData): Promis
     notes: pcNotes ?? '',
   } : null
 
+  const submitToLibrary = formData.get('submit_to_library') === 'on'
+
   const { error } = await supabase.from('scenarios').insert({
     title,
     description,
@@ -99,6 +102,8 @@ export async function createScenario(_: ActionState, formData: FormData): Promis
     tenant_id: profile.tenant_id,
     created_by: user.id,
     is_active: true,
+    is_public: submitToLibrary,
+    is_approved: false,
   })
 
   if (error) return { error: error.message }
@@ -169,4 +174,107 @@ export async function importScenarios(_: ActionState, formData: FormData): Promi
 
   revalidatePath('/dashboard')
   redirect('/dashboard')
+}
+
+export async function activateLibraryScenario(scenarioId: string): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated.' }
+
+  const { data: profile } = await supabase
+    .from('users')
+    .select('role, tenant_id')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile || !['admin', 'manager'].includes(profile.role as string)) {
+    return { error: 'Not authorized.' }
+  }
+
+  const { error } = await supabase.from('tenant_scenario_activations').insert({
+    tenant_id: profile.tenant_id,
+    scenario_id: scenarioId,
+    activated_by: user.id,
+  })
+
+  if (error) return { error: error.message }
+  revalidatePath('/scenarios/library')
+  revalidatePath('/dashboard/associate')
+  return {}
+}
+
+export async function deactivateLibraryScenario(scenarioId: string): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated.' }
+
+  const { data: profile } = await supabase
+    .from('users')
+    .select('role, tenant_id')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile || !['admin', 'manager'].includes(profile.role as string)) {
+    return { error: 'Not authorized.' }
+  }
+
+  const { error } = await supabase
+    .from('tenant_scenario_activations')
+    .delete()
+    .eq('tenant_id', profile.tenant_id as string)
+    .eq('scenario_id', scenarioId)
+
+  if (error) return { error: error.message }
+  revalidatePath('/scenarios/library')
+  revalidatePath('/dashboard/associate')
+  return {}
+}
+
+export async function approveLibraryScenario(scenarioId: string): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated.' }
+
+  const { data: profile } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (profile?.role !== 'admin') return { error: 'Admin access required.' }
+
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('scenarios')
+    .update({ is_approved: true })
+    .eq('id', scenarioId)
+
+  if (error) return { error: error.message }
+  revalidatePath('/dashboard/tenant')
+  revalidatePath('/scenarios/library')
+  return {}
+}
+
+export async function rejectLibraryScenario(scenarioId: string): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated.' }
+
+  const { data: profile } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (profile?.role !== 'admin') return { error: 'Admin access required.' }
+
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('scenarios')
+    .update({ is_public: false, is_approved: false })
+    .eq('id', scenarioId)
+
+  if (error) return { error: error.message }
+  revalidatePath('/dashboard/tenant')
+  return {}
 }

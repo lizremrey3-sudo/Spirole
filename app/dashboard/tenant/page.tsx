@@ -9,6 +9,7 @@ import AssessmentPanel from '@/app/dashboard/assessment-panel'
 import PracticeTrendChart from './practice-trend-chart'
 import TeamPanel from './team-panel'
 import IntegrationsPanel from './integrations-panel'
+import LibraryManagementPanel from './library-management-panel'
 import type { AssessmentContent } from '@/app/actions/assessments'
 import { getAssociateTypesForIndustry } from '@/lib/industry-types'
 
@@ -45,7 +46,9 @@ export default async function TenantDashboard() {
   const tenantId = profile.tenant_id as string
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
 
-  const [tenantResult, sessionsResult, assessmentResult, membersResult, practicesResult, invitationsResult, integrationResult] = await Promise.all([
+  const admin = createAdminClient()
+
+  const [tenantResult, sessionsResult, assessmentResult, membersResult, practicesResult, invitationsResult, integrationResult, pendingScenariosResult] = await Promise.all([
     supabase.from('tenants').select('name, industry').eq('id', tenantId).single(),
     supabase
       .from('sessions')
@@ -62,7 +65,7 @@ export default async function TenantDashboard() {
       .order('generated_at', { ascending: false })
       .limit(1)
       .maybeSingle(),
-    createAdminClient()
+    admin
       .from('users')
       .select('id, full_name, email, role, is_active')
       .eq('tenant_id', tenantId)
@@ -84,11 +87,37 @@ export default async function TenantDashboard() {
       .eq('tenant_id', tenantId)
       .eq('source', 'google_reviews')
       .maybeSingle(),
+    admin
+      .from('scenarios')
+      .select('id, title, description, associate_type, tenant_id')
+      .eq('is_public', true)
+      .eq('is_approved', false)
+      .order('created_at', { ascending: true }),
   ])
 
   const practiceName = (tenantResult.data?.name as string | null) ?? 'My Practice'
   const tenantIndustry = (tenantResult.data?.industry as string | null) ?? 'optical'
   const ASSOCIATE_TYPES = getAssociateTypesForIndustry(tenantIndustry).map(t => ({ key: t.value, label: t.label }))
+
+  const rawPendingScenarios = (pendingScenariosResult.data ?? []) as {
+    id: string
+    title: string
+    description: string | null
+    associate_type: string
+    tenant_id: string
+  }[]
+
+  // Fetch tenant names for pending scenarios
+  const pendingTenantIds = [...new Set(rawPendingScenarios.map(s => s.tenant_id))]
+  const { data: pendingTenants } = pendingTenantIds.length > 0
+    ? await admin.from('tenants').select('id, name').in('id', pendingTenantIds)
+    : { data: [] }
+  const tenantNameMap = new Map((pendingTenants ?? []).map(t => [t.id as string, (t.name as string | null) ?? 'Unknown']))
+
+  const pendingScenarios = rawPendingScenarios.map(s => ({
+    ...s,
+    tenantName: tenantNameMap.get(s.tenant_id) ?? 'Unknown',
+  }))
 
   type RawMember = { id: string; full_name: string | null; email: string | null; role: string; is_active: boolean }
   const teamMembers = ((membersResult.data ?? []) as RawMember[]).map(m => ({
@@ -227,6 +256,8 @@ export default async function TenantDashboard() {
             initialPlaceId={googlePlaceId}
             baseUrl={baseUrl}
           />
+
+          <LibraryManagementPanel initialScenarios={pendingScenarios} />
         </div>
       </main>
     </div>

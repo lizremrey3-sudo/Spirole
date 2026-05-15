@@ -320,6 +320,21 @@ export default function ScenarioForm({
         )}
       </div>
 
+      <div className="flex items-center gap-3 rounded-xl border border-white/[0.08] bg-white/5 px-4 py-3">
+        <input
+          id="submit_to_library"
+          name="submit_to_library"
+          type="checkbox"
+          className="h-4 w-4 rounded border-white/20 bg-white/5 accent-[#2dd4bf]"
+        />
+        <div>
+          <label htmlFor="submit_to_library" className="text-sm font-medium text-white/70 cursor-pointer">
+            Submit to Public Library
+          </label>
+          <p className="text-xs text-white/40 mt-0.5">Flags this scenario for Spirole review. Once approved, other teams can activate it.</p>
+        </div>
+      </div>
+
       <div className="flex items-center gap-4 pt-2">
         <button
           type="submit"

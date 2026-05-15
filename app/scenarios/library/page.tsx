@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import DashboardNav from '@/app/dashboard/dashboard-nav'
-import LibraryClient, { type SharedScenario, type Customization } from './library-client'
+import LibraryClient from './library-client'
 
 export default async function ScenarioLibraryPage() {
   const supabase = await createClient()
@@ -22,39 +22,50 @@ export default async function ScenarioLibraryPage() {
 
   const tenantId = profile.tenant_id as string
 
-  const [scenariosResult, customizationsResult] = await Promise.all([
+  const { data: tenant } = await supabase
+    .from('tenants')
+    .select('industry')
+    .eq('id', tenantId)
+    .single()
+  const tenantIndustry = (tenant?.industry as string | null) ?? 'optical'
+
+  const [scenariosResult, activationsResult] = await Promise.all([
     supabase
       .from('scenarios')
-      .select('id, title, category, core_skill, difficulty_default, associate_type, description')
-      .eq('is_shared', true)
-      .eq('is_active', true)
-      .order('category', { ascending: true }),
+      .select('id, title, description, associate_type, industry')
+      .eq('is_public', true)
+      .eq('is_approved', true)
+      .or(`industry.eq.${tenantIndustry},industry.eq.all`)
+      .order('title', { ascending: true }),
     supabase
-      .from('office_scenario_customizations')
-      .select('*')
+      .from('tenant_scenario_activations')
+      .select('scenario_id')
       .eq('tenant_id', tenantId),
   ])
 
-  const scenarios = (scenariosResult.data ?? []) as SharedScenario[]
-  const customizations = (customizationsResult.data ?? []) as Customization[]
+  const scenarios = (scenariosResult.data ?? []) as {
+    id: string
+    title: string
+    description: string | null
+    associate_type: string
+    industry: string
+  }[]
+
+  const activatedIds = new Set((activationsResult.data ?? []).map(a => a.scenario_id as string))
 
   return (
     <div className="flex min-h-screen bg-[#0a0e1a]">
       <DashboardNav email={user.email ?? ''} role={profile.role ?? undefined} />
 
-      <main className="mx-auto w-full max-w-6xl flex-1 min-w-0 px-6 py-10">
+      <main className="mx-auto w-full max-w-5xl flex-1 min-w-0 px-6 py-10">
         <div className="mb-8">
           <h1 className="text-2xl font-semibold text-white">Scenario Library</h1>
           <p className="mt-1 text-sm text-white/50">
-            Shared scenarios — customize for your office, then enable for your team.
+            Activate community scenarios for your team. Activated scenarios appear alongside your own.
           </p>
         </div>
 
-        <LibraryClient
-          scenarios={scenarios}
-          initialCustomizations={customizations}
-          tenantId={tenantId}
-        />
+        <LibraryClient scenarios={scenarios} initialActivatedIds={[...activatedIds]} />
       </main>
     </div>
   )

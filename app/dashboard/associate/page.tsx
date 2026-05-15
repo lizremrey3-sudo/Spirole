@@ -49,7 +49,7 @@ export default async function AssociatePage() {
     .single()
   const tenantIndustry = (tenant?.industry as string | null) ?? 'optical'
 
-  const [{ data: raw }, { data: scenarios }] = await Promise.all([
+  const [{ data: raw }, { data: ownScenarios }, { data: activations }] = await Promise.all([
     supabase
       .from('sessions')
       .select('id, score, feedback, completed_at, scenarios(title, associate_type)')
@@ -59,9 +59,29 @@ export default async function AssociatePage() {
     supabase
       .from('scenarios')
       .select('id, title, description, associate_type')
-      .eq('is_active', true)
-      .or(`industry.eq.${tenantIndustry},industry.eq.all`),
+      .eq('tenant_id', profile.tenant_id as string)
+      .eq('is_active', true),
+    supabase
+      .from('tenant_scenario_activations')
+      .select('scenario_id')
+      .eq('tenant_id', profile.tenant_id as string),
   ])
+
+  const activatedIds = (activations ?? []).map(a => a.scenario_id as string)
+
+  const { data: libraryScenarios } = activatedIds.length > 0
+    ? await supabase
+        .from('scenarios')
+        .select('id, title, description, associate_type')
+        .in('id', activatedIds)
+        .eq('is_public', true)
+        .eq('is_approved', true)
+    : { data: [] }
+
+  const scenarios = [
+    ...(ownScenarios ?? []),
+    ...(libraryScenarios ?? []),
+  ].filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i)
 
   const sessions = (raw ?? []).map(s => {
     const scenarioRaw = Array.isArray(s.scenarios) ? s.scenarios[0] : s.scenarios
