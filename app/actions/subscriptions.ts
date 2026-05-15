@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
-type ActionState = { error?: string; message?: string } | null
+type ActionState = { error?: string; message?: string; activated?: boolean } | null
 
 export async function applyPromoCode(_: ActionState, formData: FormData): Promise<ActionState> {
   const code = (formData.get('code') as string | null)?.trim().toUpperCase()
@@ -55,7 +55,7 @@ export async function applyPromoCode(_: ActionState, formData: FormData): Promis
       .update({ uses_count: promo.uses_count + 1 })
       .eq('id', promo.id)
 
-    redirect('/dashboard')
+    return { activated: true }
   }
 
   return {

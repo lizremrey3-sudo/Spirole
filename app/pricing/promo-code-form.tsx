@@ -1,10 +1,33 @@
 'use client'
 
 import { useActionState } from 'react'
+import { useRouter } from 'next/navigation'
 import { applyPromoCode } from '@/app/actions/subscriptions'
 
 export default function PromoCodeForm() {
+  const router = useRouter()
   const [state, action, isPending] = useActionState(applyPromoCode, null)
+
+  if (state?.activated) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+        <div className="mx-4 max-w-sm w-full rounded-2xl border border-white/10 bg-[#0d1117] p-8 text-center shadow-2xl">
+          <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-[#2dd4bf]">
+            You&apos;re in
+          </p>
+          <p className="mb-8 text-base leading-relaxed text-white">
+            You and your invitees are active for free until June 15, 2026.
+          </p>
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="w-full rounded-md bg-[#2dd4bf] px-4 py-3 text-sm font-semibold text-[#0a0e1a] transition-colors hover:bg-[#2dd4bf]/80"
+          >
+            Go to dashboard
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <form action={action} className="flex flex-col gap-3">
