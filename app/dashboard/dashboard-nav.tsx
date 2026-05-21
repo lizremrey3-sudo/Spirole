@@ -18,6 +18,7 @@ export default function DashboardNav({
   const NAV = [
     { href: dashboardHref, label: 'Dashboard' },
     { href: '/dashboard/associate', label: 'Sessions' },
+    { href: '/learn', label: 'Lessons' },
     { href: '/dashboard/think', label: 'Reflect' },
     ...(['admin', 'manager'].includes(role ?? '') ? [
       { href: '/scenarios/library', label: 'Scenario Library' },

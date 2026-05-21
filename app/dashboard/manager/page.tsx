@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import DashboardNav from '@/app/dashboard/dashboard-nav'
 import AssessmentPanel from '@/app/dashboard/assessment-panel'
 import TrendChart from './trend-chart'
@@ -88,7 +89,7 @@ export default async function ManagerDashboard() {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
   const thirtyDaysAgoDate = thirtyDaysAgo.split('T')[0]
 
-  const [tenantResult, sessionsResult, assessmentResult, externalMetricsResult] = await Promise.all([
+  const [tenantResult, sessionsResult, assessmentResult, externalMetricsResult, membersResult, lessonsResult] = await Promise.all([
     supabase.from('tenants').select('name, industry').eq('id', tenantId).single(),
     supabase
       .from('sessions')
@@ -111,12 +112,44 @@ export default async function ManagerDashboard() {
       .eq('tenant_id', tenantId)
       .gte('recorded_date', thirtyDaysAgoDate)
       .order('recorded_date', { ascending: false }),
+    supabase
+      .from('users')
+      .select('id, full_name, email')
+      .eq('tenant_id', tenantId),
+    supabase
+      .from('lessons')
+      .select('id, title, slug')
+      .eq('is_published', true)
+      .order('order_index', { ascending: true }),
   ])
+
+  const memberIds = (membersResult.data ?? []).map(m => m.id as string)
+  const { data: completionsData } = memberIds.length > 0
+    ? await createAdminClient()
+        .from('lesson_completions')
+        .select('user_id, lesson_id, quiz_passed')
+        .in('user_id', memberIds)
+    : { data: [] }
 
   const practiceName = (tenantResult.data?.name as string | null) ?? 'My Practice'
   const tenantIndustry = (tenantResult.data?.industry as string | null) ?? 'optical'
   const ASSOCIATE_TYPES = getAssociateTypesForIndustry(tenantIndustry).map(t => ({ key: t.value, label: t.label }))
   const sessions = (sessionsResult.data ?? []) as SessionRow[]
+
+  // Lessons data for manager view
+  type LessonRow = { id: string; title: string; slug: string }
+  type CompletionRow = { user_id: string; lesson_id: string; quiz_passed: boolean }
+  type MemberRow = { id: string; full_name: string | null; email: string | null }
+  const lessons = (lessonsResult.data ?? []) as LessonRow[]
+  const completions = (completionsData ?? []) as CompletionRow[]
+  const teamMembers = (membersResult.data ?? []) as MemberRow[]
+  const completionByUserLesson = new Map<string, boolean>()
+  for (const c of completions) {
+    completionByUserLesson.set(`${c.user_id}::${c.lesson_id}`, c.quiz_passed)
+  }
+  function memberLessonsCompleted(userId: string): number {
+    return lessons.filter(l => completionByUserLesson.get(`${userId}::${l.id}`) === true).length
+  }
   const cachedAssessment = assessmentResult.data as { content: AssessmentContent; generated_at: string } | null
   const externalMetrics = (externalMetricsResult.data ?? []) as ExternalMetric[]
 
@@ -307,6 +340,63 @@ export default async function ManagerDashboard() {
               </div>
             )}
           </div>
+
+          {/* Team Lessons */}
+          {lessons.length > 0 && (
+            <div className="rounded-xl border border-white/10 bg-[#111827] p-6">
+              <h2 className="mb-1 text-sm font-semibold text-[#2dd4bf]">Team Lessons</h2>
+              <p className="mb-5 text-xs text-white/40">Completion status per team member</p>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-white/10">
+                      <th className="pb-3 text-left text-xs font-medium text-white/40">Member</th>
+                      <th className="pb-3 text-center text-xs font-medium text-white/40">Completed</th>
+                      {lessons.map(l => (
+                        <th
+                          key={l.id}
+                          className="pb-3 text-center text-xs font-medium text-white/40 min-w-[60px]"
+                          title={l.title}
+                        >
+                          <a href={`/learn/${l.slug}`} className="hover:text-white/70 transition-colors">
+                            {l.title.split(' ').slice(0, 2).join(' ')}…
+                          </a>
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {teamMembers.map(member => {
+                      const name = member.full_name || member.email || 'Unknown'
+                      const completed = memberLessonsCompleted(member.id)
+                      return (
+                        <tr key={member.id}>
+                          <td className="py-3 pr-4 text-sm text-white/70 whitespace-nowrap">{name}</td>
+                          <td className="py-3 text-center text-sm">
+                            <span className={`font-medium ${completed === lessons.length ? 'text-green-400' : 'text-white/50'}`}>
+                              {completed}/{lessons.length}
+                            </span>
+                          </td>
+                          {lessons.map(l => {
+                            const done = completionByUserLesson.get(`${member.id}::${l.id}`) === true
+                            return (
+                              <td key={l.id} className="py-3 text-center text-sm">
+                                {done
+                                  ? <span className="text-green-400">✓</span>
+                                  : <span className="text-white/20">—</span>
+                                }
+                              </td>
+                            )
+                          })}
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
         </div>
       </main>
