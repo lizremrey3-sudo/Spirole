@@ -57,7 +57,7 @@ export default async function SessionPage({
   const [sessionResult, messagesResult, audioCheck, profileResult] = await Promise.all([
     supabase
       .from('sessions')
-      .select('id, status, score, feedback, started_at, completed_at, scenarios(title, description, persona, rubric, associate_type)')
+      .select('id, status, score, feedback, started_at, completed_at, scenarios(title, description, persona, rubric, associate_type, patient_context)')
       .eq('id', id)
       .single(),
     supabase
@@ -92,6 +92,7 @@ export default async function SessionPage({
   const persona = (scenarioRaw?.persona ?? {}) as PersonaJson
   const rubric = (scenarioRaw?.rubric ?? {}) as RubricJson
   const personaName = typeof persona.name === 'string' ? persona.name : 'AI'
+  const patientContext = (scenarioRaw?.patient_context ?? null) as Record<string, unknown> | null
   const associateType = (scenarioRaw?.associate_type as string | undefined) ?? 'manager'
   const isCoachingSession = associateType === 'manager'
   const userTurns = messages.filter(m => m.role === 'user').length
@@ -189,13 +190,61 @@ export default async function SessionPage({
           coachingNote={coachingNote as { id: string; notes: string; updated_at: string } | null}
         />
       ) : (
-        <ChatInterface
-          sessionId={id}
-          initialMessages={messages}
-          personaName={personaName}
-          userMessageCount={userTurns}
-        />
+        <div className="flex flex-1 overflow-hidden">
+          <ChatInterface
+            sessionId={id}
+            initialMessages={messages}
+            personaName={personaName}
+            userMessageCount={userTurns}
+          />
+          {patientContext && Object.keys(patientContext).length > 0 && (
+            <PatientContextPanel patientContext={patientContext} />
+          )}
+        </div>
       )}
+    </div>
+  )
+}
+
+function PatientContextPanel({ patientContext }: { patientContext: Record<string, unknown> }) {
+  const formatKey = (k: string) =>
+    k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+
+  return (
+    <div className="hidden w-80 shrink-0 flex-col border-l border-white/10 bg-[#111827] lg:flex">
+      <div className="border-b border-white/10 px-5 py-4">
+        <h2 className="text-sm font-semibold text-[#2dd4bf]">Patient Chart</h2>
+        <p className="mt-0.5 text-xs text-white/40">Reference during session</p>
+      </div>
+      <div className="flex-1 overflow-y-auto px-5 py-5">
+        <div className="flex flex-col gap-5">
+          {Object.entries(patientContext).map(([key, value]) => (
+            <div key={key}>
+              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-white/35">
+                {formatKey(key)}
+              </p>
+              {typeof value === 'object' && value !== null && !Array.isArray(value) ? (
+                <div className="rounded-lg border border-white/5 bg-white/[0.03] px-3 py-2">
+                  {Object.entries(value as Record<string, unknown>).map(([subKey, subVal]) => (
+                    <div key={subKey} className="flex items-baseline justify-between gap-2 py-0.5">
+                      <span className="text-xs font-medium text-white/40">{subKey}</span>
+                      <span className="text-xs text-white/80">{String(subVal)}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : Array.isArray(value) ? (
+                <ul className="space-y-1">
+                  {(value as unknown[]).map((item, i) => (
+                    <li key={i} className="text-sm text-white/70">{String(item)}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm leading-relaxed text-white/75">{String(value)}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }

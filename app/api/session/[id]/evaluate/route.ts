@@ -91,7 +91,9 @@ Return your evaluation as a valid JSON object with this exact structure:
   "improvements": ["<specific improvement 1>", "<specific improvement 2>"]
 }
 
-IMPORTANT: The associate's responses were recorded via speech-to-text microphone and may lack punctuation, capitalization, or contain run-on sentences. Do not evaluate or penalize any of these — evaluate only the content, communication quality, empathy, product knowledge, and interpersonal skills. Treat all text as spoken word, not written text.
+IMPORTANT — AREAS TO IMPROVE: When evaluating Areas to Improve, only flag behaviors the associate could have realistically controlled given how the scenario unfolded. Do not suggest the associate should have proactively addressed information that the scenario did not give them an opportunity to introduce — for example, if the patient's opening line was reactive or complaint-based, the associate cannot be faulted for not being proactive before the patient spoke. Evaluate what the associate actually had the opportunity to do, not an idealized version of the scenario.
+
+IMPORTANT — TEXT FORMAT: This is a text-based practice simulation of a spoken conversation. Do not evaluate spelling, capitalization, punctuation, acronym formatting, or any written conventions — the associate is simulating speech through text. Evaluate only the communication content, patient handling, empathy, knowledge accuracy, and professional judgment as if listening to a spoken conversation.
 
 Return ONLY the JSON object with no additional text or markdown.`
 }
