@@ -12,10 +12,13 @@
     "@anthropic-ai/sdk": "^0.91.0",
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.104.0",
+    "@tailwindcss/typography": "^0.5.19",
     "next": "16.2.4",
     "next-mdx-remote": "^6.0.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
     "resend": "^6.12.2",
     "stripe": "^22.1.0"
   },

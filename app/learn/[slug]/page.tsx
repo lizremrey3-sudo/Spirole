@@ -1,7 +1,8 @@
 export const dynamic = 'force-dynamic'
 
 import { redirect } from 'next/navigation'
-import { MDXRemote } from 'next-mdx-remote/rsc'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { createClient } from '@/lib/supabase/server'
 import DashboardNav from '@/app/dashboard/dashboard-nav'
 import QuizClient from './quiz-client'
@@ -174,7 +175,9 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
           prose-hr:border-white/10
           prose-code:text-[#2dd4bf] prose-code:bg-white/5 prose-code:px-1 prose-code:py-0.5 prose-code:rounded
         ">
-          <MDXRemote source={lesson.content_mdx as string} />
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {lesson.content_mdx as string}
+          </ReactMarkdown>
         </div>
 
         {/* Language framework card */}
