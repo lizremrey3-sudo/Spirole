@@ -6,10 +6,6 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { createClient } from '@/lib/supabase/server'
 import DashboardNav from '@/app/dashboard/dashboard-nav'
-import QuizClient from './quiz-client'
-import { generateQuizQuestions } from '@/app/actions/lessons'
-import type { QuizQuestion } from '@/app/actions/lessons'
-
 type LanguageFramework = {
   short_version?: string
   long_version?: string
@@ -146,42 +142,13 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
 
   const { data: lesson } = await supabase
     .from('lessons')
-    .select('id, title, description, content_mdx, language_framework, role_tags, industry_tags, scenario_id, order_index')
+    .select('id, title, description, content_mdx, language_framework, role_tags, industry_tags, order_index')
     .eq('slug', slug)
     .eq('is_published', true)
     .maybeSingle()
 
   if (!lesson) redirect('/dashboard')
 
-  const [rawQuestionsResult, completionRow] = await Promise.all([
-    supabase
-      .from('lesson_quiz_questions')
-      .select('question, correct_answer, distractors, order_index')
-      .eq('lesson_id', lesson.id)
-      .order('order_index', { ascending: true }),
-    supabase
-      .from('lesson_completions')
-      .select('quiz_passed')
-      .eq('user_id', user.id)
-      .eq('lesson_id', lesson.id)
-      .maybeSingle(),
-  ])
-
-  let questions: QuizQuestion[] = (rawQuestionsResult.data ?? []).map(q => ({
-    question: q.question as string,
-    correct_answer: q.correct_answer as string,
-    distractors: (q.distractors as string[]) ?? [],
-  }))
-
-  if (questions.length === 0) {
-    try {
-      questions = await generateQuizQuestions(lesson.title as string, lesson.content_mdx as string)
-    } catch {
-      questions = []
-    }
-  }
-
-  const initialPassed = (completionRow.data?.quiz_passed as boolean | null) ?? false
   const readTime = estimateReadTime(lesson.content_mdx as string)
   const framework = lesson.language_framework as LanguageFramework | null
   const dashboardHref = ['manager', 'admin'].includes(profile.role as string)
@@ -199,7 +166,7 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
           href="/learn"
           className="mb-6 inline-flex items-center gap-1.5 text-sm text-white/40 transition-colors hover:text-white/60"
         >
-          ← Lessons
+          ← Resources
         </a>
 
         {/* Header */}
@@ -215,11 +182,6 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
                 {tag}
               </span>
             ))}
-            {initialPassed && (
-              <span className="rounded-full bg-green-500/10 px-2.5 py-0.5 text-xs text-green-400">
-                ✓ Completed
-              </span>
-            )}
           </div>
           <h1 className="text-2xl font-semibold text-white">{lesson.title as string}</h1>
           {lesson.description && (
@@ -240,15 +202,6 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
           <FrameworkCard framework={framework} />
         )}
 
-        {/* Quiz */}
-        <div className="mt-10">
-          <QuizClient
-            lessonId={lesson.id as string}
-            questions={questions}
-            scenarioId={(lesson.scenario_id as string | null) ?? null}
-            initialPassed={initialPassed}
-          />
-        </div>
 
       </main>
     </div>
